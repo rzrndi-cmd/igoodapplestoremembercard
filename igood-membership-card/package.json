@@ -1,0 +1,9 @@
+{
+  "name": "igood-membership-card",
+  "version": "1.0.0",
+  "private": true,
+  "description": "iGood Apple Store Kebumen - Priority Care Membership Card System",
+  "scripts": {
+    "build": "echo 'Build complete'"
+  }
+}

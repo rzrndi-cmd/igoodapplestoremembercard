@@ -1,0 +1,585 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Preview Kartu Member - iGood Apple Store Kebumen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&family=Caveat:wght@600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card-bg: linear-gradient(135deg, #18191f 0%, #0d0e12 60%, #15161d 100%);
+      --gold: #dfb76c;
+      --gold-light: #f7de9d;
+      --text-main: #f5f5f7;
+      --text-muted: #8e8e93;
+      --border-glow: rgba(223, 183, 108, 0.25);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+
+    body {
+      background: radial-gradient(circle at 50% 20%, #1c1f2e 0%, #090a0f 80%);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 26px;
+      font-weight: 700;
+      background: linear-gradient(90deg, #ffffff, var(--gold-light), #ffffff);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      letter-spacing: -0.5px;
+      margin-bottom: 8px;
+    }
+
+    header p {
+      color: var(--text-muted);
+      font-size: 14px;
+    }
+
+    .main-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 40px;
+      max-width: 1100px;
+      width: 100%;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    /* 3D Card Scene */
+    .scene {
+      width: 480px;
+      height: 295px;
+      perspective: 1200px;
+    }
+
+    @media (max-width: 540px) {
+      .scene {
+        width: 100%;
+        max-width: 380px;
+        height: 235px;
+      }
+    }
+
+    .card-wrapper {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      transform-style: preserve-3d;
+      cursor: pointer;
+    }
+
+    .card-wrapper.is-flipped {
+      transform: rotateY(180deg);
+    }
+
+    .card-face {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 20px;
+      backface-visibility: hidden;
+      overflow: hidden;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7), 
+                  0 0 0 1px rgba(255, 255, 255, 0.08),
+                  inset 0 1px 1px rgba(255, 255, 255, 0.15);
+      background: var(--card-bg);
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Brushed Titanium Texture Overlay */
+    .card-face::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: radial-gradient(circle at 75% 30%, rgba(223, 183, 108, 0.12) 0%, transparent 60%),
+                  repeating-radial-gradient(circle at 60% 50%, rgba(255,255,255,0.015) 0, rgba(255,255,255,0.015) 1px, transparent 2px, transparent 4px);
+      pointer-events: none;
+    }
+
+    /* FRONT FACE */
+    .card-front {
+      z-index: 2;
+    }
+
+    .front-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      position: relative;
+      z-index: 1;
+    }
+
+    .brand-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-name {
+      font-size: 19px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: -0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .brand-name span {
+      color: var(--gold);
+    }
+
+    .badge-tier {
+      display: inline-block;
+      align-self: flex-start;
+      margin-top: 6px;
+      padding: 4px 10px;
+      background: rgba(223, 183, 108, 0.15);
+      border: 1px solid rgba(223, 183, 108, 0.4);
+      border-radius: 50px;
+      color: var(--gold-light);
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1.2px;
+      text-transform: uppercase;
+    }
+
+    .chip-container {
+      margin: 12px 0 6px 0;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .emv-chip {
+      width: 44px;
+      height: 33px;
+      background: linear-gradient(135deg, #d8b05f, #f9df9b, #b38b38);
+      border-radius: 6px;
+      position: relative;
+      box-shadow: inset 0 0 3px rgba(0,0,0,0.4);
+      overflow: hidden;
+    }
+
+    .emv-chip::after {
+      content: '';
+      position: absolute;
+      top: 50%; left: 0; right: 0;
+      height: 1px;
+      background: rgba(0,0,0,0.3);
+    }
+
+    .nfc-icon {
+      opacity: 0.6;
+    }
+
+    .front-footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      position: relative;
+      z-index: 1;
+    }
+
+    .member-info {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .label-small {
+      font-size: 9px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      letter-spacing: 0.8px;
+    }
+
+    .member-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #ffffff;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+    }
+
+    .member-id {
+      font-family: 'Space Grotesk', monospace;
+      font-size: 13px;
+      color: var(--gold-light);
+      letter-spacing: 1px;
+    }
+
+    .member-validity {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .qr-box {
+      width: 68px;
+      height: 68px;
+      background: #ffffff;
+      padding: 5px;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .qr-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* BACK FACE */
+    .card-back {
+      transform: rotateY(180deg);
+      padding: 0;
+    }
+
+    .mag-stripe {
+      width: 100%;
+      height: 44px;
+      background: #050608;
+      margin-top: 20px;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.8);
+    }
+
+    .back-content {
+      padding: 16px 26px 20px 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      height: calc(100% - 64px);
+    }
+
+    .signature-area {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .sig-strip {
+      flex: 1;
+      height: 38px;
+      background: repeating-linear-gradient(45deg, #f0f0f0, #f0f0f0 10px, #e8e8e8 10px, #e8e8e8 20px);
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 14px;
+      position: relative;
+    }
+
+    .signature-rendered {
+      font-family: 'Caveat', cursive;
+      font-size: 26px;
+      color: #111;
+      position: absolute;
+      left: 20px;
+      transform: rotate(-3deg);
+    }
+
+    .cvv-text {
+      font-family: monospace;
+      font-size: 11px;
+      color: #666;
+      font-weight: bold;
+    }
+
+    .benefit-list {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .benefit-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11px;
+    }
+
+    .benefit-item .title {
+      color: #d1d1d6;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .benefit-item .val {
+      color: var(--gold-light);
+      font-weight: 700;
+    }
+
+    .back-footer {
+      font-size: 9.5px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.4;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      padding-top: 8px;
+    }
+
+    .back-footer strong {
+      color: var(--text-main);
+    }
+
+    /* CONTROL PANEL */
+    .controls-panel {
+      background: #14161f;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      padding: 24px;
+      width: 380px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+    }
+
+    .controls-panel h3 {
+      font-size: 16px;
+      margin-bottom: 16px;
+      color: var(--gold-light);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .flip-btn {
+      background: rgba(223, 183, 108, 0.15);
+      border: 1px solid var(--gold);
+      color: var(--gold-light);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .flip-btn:hover {
+      background: var(--gold);
+      color: #000;
+    }
+
+    .form-group {
+      margin-bottom: 14px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+
+    .form-group input {
+      width: 100%;
+      background: #0a0b10;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: #fff;
+      padding: 10px 12px;
+      border-radius: 8px;
+      font-size: 13px;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .form-group input:focus {
+      border-color: var(--gold);
+    }
+
+    .hint-text {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 15px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>iGood Apple Store Kebumen</h1>
+    <p>Digital Membership Card & Warranty Pass Interactive Preview</p>
+  </header>
+
+  <div class="main-container">
+    <!-- 3D Card Display -->
+    <div>
+      <div class="scene">
+        <div class="card-wrapper" id="cardWrapper" onclick="flipCard()">
+          
+          <!-- FRONT FACE -->
+          <div class="card-face card-front">
+            <div class="front-header">
+              <div class="brand-group">
+                <div class="brand-name">
+                  <svg width="18" height="22" viewBox="0 0 170 170" fill="currentColor">
+                    <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.19-2.12-9.97-3.17-14.34-3.17-4.58 0-9.49 1.05-14.75 3.17-5.26 2.13-9.5 3.24-12.74 3.35-4.35.13-9.16-1.9-14.42-6.08-3.69-3.04-7.58-7.7-11.66-13.98-5.99-9.13-10.79-19.78-14.41-31.96-3.62-12.17-5.43-23.75-5.43-34.73 0-15.01 3.69-27.18 11.07-36.5 7.38-9.33 16.73-14.07 28.05-14.23 5.43 0 11.07 1.41 16.92 4.23 5.85 2.82 9.69 4.3 11.52 4.45 1.53 0 5.61-1.57 12.24-4.7 6.63-3.14 12.57-4.54 17.82-4.2 13.06.84 23.36 5.69 30.9 14.54-11.39 6.89-16.97 16.32-16.74 28.3.23 9.46 3.92 17.43 11.07 23.9 7.15 6.47 15.54 10.02 25.17 10.65-2.26 6.96-5.02 13.92-8.29 20.89zM119.22 33.15c0-7.28 2.66-14.15 7.99-20.61 5.33-6.46 11.95-10.64 19.86-12.54 1.07 7.06-.92 13.88-5.98 20.47-5.06 6.59-11.83 10.87-20.31 12.84-.42-.06-1.56-.16-.62-2.16z"/>
+                  </svg>
+                  iGood <span>Kebumen</span>
+                </div>
+                <div class="badge-tier">PRIORITY CARE MEMBER</div>
+              </div>
+
+              <!-- NFC Wave Icon -->
+              <div class="nfc-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8.5 16.5a5 5 0 0 1 0-9"/>
+                  <path d="M12 19a8.5 8.5 0 0 0 0-14"/>
+                  <path d="M15.5 21.5a12 12 0 0 0 0-19"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="chip-container">
+              <div class="emv-chip"></div>
+            </div>
+
+            <div class="front-footer">
+              <div class="member-info">
+                <span class="label-small">Cardholder Name</span>
+                <div class="member-name" id="cardNameDisplay">AHMAD FAUZI</div>
+                <div class="member-id" id="cardIdDisplay">IG-KBM-2026-0889</div>
+                <div class="member-validity">VALID: <span id="cardValidDisplay">09/26 - 09/27</span></div>
+              </div>
+
+              <div class="qr-box">
+                <!-- Dynamic QR Placeholder SVG -->
+                <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=IG-KBM-2026-0889" alt="QR Code" id="cardQrDisplay">
+              </div>
+            </div>
+          </div>
+
+          <!-- BACK FACE -->
+          <div class="card-face card-back">
+            <div class="mag-stripe"></div>
+            <div class="back-content">
+              
+              <div class="signature-area">
+                <div class="sig-strip">
+                  <span class="signature-rendered" id="cardSigDisplay">Ahmad Fauzi</span>
+                  <span class="cvv-text">SECURE</span>
+                </div>
+              </div>
+
+              <div class="benefit-list">
+                <div class="benefit-item">
+                  <span class="title">🛡️ Garansi Mesin (User Error)</span>
+                  <span class="val">Diskon 5% - 15%</span>
+                </div>
+                <div class="benefit-item">
+                  <span class="title">🎁 Referral Customer Baru</span>
+                  <span class="val">Reward Rp 25.000</span>
+                </div>
+                <div class="benefit-item">
+                  <span class="title">⚡ Fast Track Service & Consult</span>
+                  <span class="val">Prioritas</span>
+                </div>
+              </div>
+
+              <div class="back-footer">
+                <div><strong>iGood Apple Store Kebumen</strong> | CS: 0812-XXXX-XXXX</div>
+                <div>Berlaku 1 tahun sejak tanggal registrasi. Khusus unit terdaftar toko. S&K Berlaku.</div>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <p style="text-align: center; color: var(--text-muted); font-size: 12px; margin-top: 14px;">
+        👆 <em>Klik kartu untuk membalik (Depan / Belakang)</em>
+      </p>
+    </div>
+
+    <!-- Live Customizer Form -->
+    <div class="controls-panel">
+      <h3>
+        <span>Live Customizer</span>
+        <button class="flip-btn" onclick="flipCard()">Putar Kartu 🔄</button>
+      </h3>
+
+      <div class="form-group">
+        <label>Nama Member</label>
+        <input type="text" id="inputName" value="AHMAD FAUZI" oninput="updateCard()">
+      </div>
+
+      <div class="form-group">
+        <label>Nomor ID Member</label>
+        <input type="text" id="inputId" value="IG-KBM-2026-0889" oninput="updateCard()">
+      </div>
+
+      <div class="form-group">
+        <label>Masa Berlaku (Valid Thru)</label>
+        <input type="text" id="inputValidity" value="09/26 - 09/27" oninput="updateCard()">
+      </div>
+
+      <div class="form-group">
+        <label>Teks Tanda Tangan (Preview Belakang)</label>
+        <input type="text" id="inputSig" value="Ahmad Fauzi" oninput="updateCard()">
+      </div>
+
+      <div class="hint-text">
+        💡 <strong>Fitur Siap Diintegrasikan:</strong><br>
+        Setelah desain ini disetujui, kita bisa langsung menghubungkannya ke <strong>Formulir Pendaftaran Pelanggan</strong> dengan fitur tanda tangan layar langsung (*touch canvas*) dan sistem kirim otomatis via WhatsApp & Email!
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function flipCard() {
+      const wrapper = document.getElementById('cardWrapper');
+      wrapper.classList.toggle('is-flipped');
+    }
+
+    function updateCard() {
+      const name = document.getElementById('inputName').value.trim() || 'NAMA MEMBER';
+      const id = document.getElementById('inputId').value.trim() || 'IG-KBM-XXXX';
+      const validity = document.getElementById('inputValidity').value.trim() || 'MM/YY - MM/YY';
+      const sig = document.getElementById('inputSig').value.trim() || 'Member Sign';
+
+      document.getElementById('cardNameDisplay').innerText = name.toUpperCase();
+      document.getElementById('cardIdDisplay').innerText = id.toUpperCase();
+      document.getElementById('cardValidDisplay').innerText = validity;
+      document.getElementById('cardSigDisplay').innerText = sig;
+      
+      // Update QR Code API
+      document.getElementById('cardQrDisplay').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(id)}`;
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0b0e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>iGood Kebumen - Priority Card</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+  <!-- Mobile App Frame Container -->
+  <div class="mobile-wrapper">
+    
+    <!-- Top Mobile App Bar -->
+    <div class="mobile-appbar">
+      <div class="appbar-brand">
+        <img src="IGOOD LOGO.png" alt="iGood Apple Store" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; background: #fff; margin-right: 8px;">
+        <div class="brand-text">
+          <span class="store-name">iGood <strong>Kebumen</strong></span>
+          <span class="store-tag">Official Membership Pass</span>
+        </div>
+      </div>
+      <div class="store-status">
+        <span class="status-dot"></span> Buka
+      </div>
+    </div>
+
+    <!-- Scrollable Content Area -->
+    <div class="mobile-content">
+
+      <!-- VIEW 1: FORMULIR PENDAFTARAN (MOBILE) -->
+      <div class="view-panel" id="view-register">
+        
+        <!-- Hero Banner Benefit -->
+        <div class="hero-benefit-card">
+          <div class="hero-badge">🌟 BENEFIT MEMBER • RP 25.000 / TAHUN</div>
+          <h2 class="hero-title">Priority Care & Warranty</h2>
+          <div class="benefit-pills">
+            <div class="pill-item">
+              <span class="pill-icon">🛡️</span>
+              <div class="pill-text">
+                <strong>Diskon Service 5% - 15%</strong>
+                <small>Garansi mesin (termasuk user error)</small>
+              </div>
+            </div>
+            <div class="pill-item">
+              <span class="pill-icon">🎁</span>
+              <div class="pill-text">
+                <strong>Cashback Referral Rp 25.000</strong>
+                <small>Tiap bawa teman beli HP di toko</small>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Live Flip Card Preview on Mobile -->
+        <div class="card-section-label">
+          <span>Preview Kartu Digital</span>
+          <small onclick="toggleCardFlip()">Ketuk untuk Membalik 🔄</small>
+        </div>
+
+        <div class="mobile-card-scene" onclick="toggleCardFlip()">
+          <div class="mobile-card-inner" id="interactiveCardInner">
+            
+            <!-- Front Side -->
+            <div class="m-card-face m-card-front">
+              <div class="m-cf-top">
+                <div>
+                  <div class="m-cf-brand">iGood <span>Kebumen</span></div>
+                  <div class="m-cf-badge">PRIORITY CARE</div>
+                </div>
+                <div class="m-nfc-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8.5 16.5a5 5 0 0 1 0-9"/>
+                    <path d="M12 19a8.5 8.5 0 0 0 0-14"/>
+                    <path d="M15.5 21.5a12 12 0 0 0 0-19"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="m-emv-chip"></div>
+
+              <div class="m-cf-bottom">
+                <div class="m-member-text">
+                  <span class="m-label">CARDHOLDER</span>
+                  <div class="m-val-name" id="cfName">NAMA PELANGGAN</div>
+                  <div class="m-val-id" id="cfId">IG-KBM-2026-XXXX</div>
+                  <div class="m-val-valid" id="cfValid">09/26 - 09/27</div>
+                </div>
+                <div class="m-qr-box">
+                  <img id="cfQrImg" src="https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=IG-KBM-DEMO" alt="QR">
+                </div>
+              </div>
+            </div>
+
+            <!-- Back Side -->
+            <div class="m-card-face m-card-back">
+              <div class="m-mag-stripe"></div>
+              <div class="m-back-inner">
+                <div class="m-sig-strip">
+                  <img id="cbSigImg" class="m-sig-img" src="" alt="Tanda Tangan" style="display:none;">
+                  <span class="m-sig-watermark">DIGITAL SIGNATURE</span>
+                  <span class="m-cvv">SECURE</span>
+                </div>
+
+                <div class="m-benefits-list">
+                  <div class="m-b-item">
+                    <span>🛡️ Garansi Mesin User Error</span>
+                    <strong>Diskon 5-15%</strong>
+                  </div>
+                  <div class="m-b-item">
+                    <span>🎁 Reward Bawa Teman</span>
+                    <strong>Rp 25.000 / User</strong>
+                  </div>
+                </div>
+
+                <div class="m-back-foot">
+                  iGood Apple Store Kebumen • Masa Aktif 1 Tahun
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Registration Form -->
+        <form id="memberForm" class="mobile-form">
+          
+          <div class="form-section-title">
+            <span class="sec-num">1</span>
+            <span>Data Identitas Diri</span>
+          </div>
+
+          <div class="m-input-group">
+            <label>Nomor KTP / Identitas *</label>
+            <input type="text" id="regKtp" placeholder="Nomor KTP / NIK 16 digit" inputmode="numeric" required>
+          </div>
+
+          <div class="m-input-group">
+            <label>Nama Lengkap (Sesuai KTP) *</label>
+            <input type="text" id="regName" placeholder="Contoh: Ahmad Fauzi" autocomplete="name" required>
+          </div>
+
+          <div class="m-input-group">
+            <label>Tanggal Lahir *</label>
+            <input type="date" id="regBirthDate" required>
+          </div>
+
+          <div class="form-section-title">
+            <span class="sec-num">2</span>
+            <span>Kontak & Unit Terdaftar</span>
+          </div>
+
+          <div class="m-input-group">
+            <label>Nomor WhatsApp Aktif *</label>
+            <div class="m-phone-input">
+              <span class="phone-prefix">+62</span>
+              <input type="tel" id="regPhone" placeholder="81234567890" inputmode="tel" required>
+            </div>
+            <small class="m-hint">Kartu digital dikirimkan langsung ke nomor ini</small>
+          </div>
+
+          <div class="m-input-group">
+            <label>Alamat Email *</label>
+            <input type="email" id="regEmail" placeholder="nama@email.com" autocomplete="email" required>
+          </div>
+
+          <div class="m-input-group">
+            <label>Nomor IMEI / Seri HP (Opsional)</label>
+            <input type="text" id="regImei" placeholder="Contoh: 356789123456789" inputmode="numeric">
+            <small class="m-hint">Untuk pencocokan unit garansi pembelian toko</small>
+          </div>
+
+          <div class="form-section-title">
+            <span class="sec-num">3</span>
+            <span>Tanda Tangan Digital Layar</span>
+          </div>
+
+          <div class="sig-card">
+            <div class="sig-header">
+              <span>✍️ Goreskan tanda tangan jari Anda:</span>
+              <button type="button" class="btn-clear-sig" onclick="clearSignature()">Ulangi 🗑️</button>
+            </div>
+            <div class="sig-canvas-container">
+              <canvas id="signaturePad"></canvas>
+            </div>
+          </div>
+
+          <!-- Syarat & Ketentuan Checkbox -->
+          <div class="m-terms-group">
+            <label class="checkbox-container">
+              <input type="checkbox" id="agreeTerms" required>
+              <span class="checkmark"></span>
+              <span class="terms-text">
+                Saya menyetujui seluruh <a href="javascript:void(0)" onclick="openTermsModal()">Syarat & Ketentuan Layanan</a> Priority Membership iGood Kebumen (Garansi Servis Mesin User Error Diskon 5-15% & Referral Bonus 25k).
+              </span>
+            </label>
+          </div>
+
+          <!-- Submit Activation Button -->
+          <button type="submit" class="btn-activate-mobile" id="btnSubmitForm">
+            <span>Aktivasi Member (Rp 25.000 / 1 Thn)</span>
+            <span class="btn-arrow">→</span>
+          </button>
+
+        </form>
+
+      </div>
+
+      <!-- VIEW 2: KARTU DIGITAL & PENGIRIMAN (MOBILE) -->
+      <div class="view-panel" id="view-card" style="display: none;">
+        
+        <div class="success-banner">
+          <div class="success-icon">✓</div>
+          <h3>Membership Aktif!</h3>
+          <p>Kartu digital Priority Member telah diterbitkan</p>
+        </div>
+
+        <!-- Result Card Display -->
+        <div class="mobile-card-scene" onclick="toggleCardFlip()">
+          <div class="mobile-card-inner" id="resultCardInner">
+            <!-- Front -->
+            <div class="m-card-face m-card-front">
+              <div class="m-cf-top">
+                <div>
+                  <div class="m-cf-brand">iGood <span>Kebumen</span></div>
+                  <div class="m-cf-badge">PRIORITY CARE</div>
+                </div>
+                <div class="m-nfc-icon">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8.5 16.5a5 5 0 0 1 0-9"/>
+                    <path d="M12 19a8.5 8.5 0 0 0 0-14"/>
+                    <path d="M15.5 21.5a12 12 0 0 0 0-19"/>
+                  </svg>
+                </div>
+              </div>
+
+              <div class="m-emv-chip"></div>
+
+              <div class="m-cf-bottom">
+                <div class="m-member-text">
+                  <span class="m-label">CARDHOLDER</span>
+                  <div class="m-val-name" id="resCfName">-</div>
+                  <div class="m-val-id" id="resCfId">-</div>
+                  <div class="m-val-valid" id="resCfValid">-</div>
+                </div>
+                <div class="m-qr-box">
+                  <img id="resCfQrImg" src="" alt="QR Code">
+                </div>
+              </div>
+            </div>
+
+            <!-- Back -->
+            <div class="m-card-face m-card-back">
+              <div class="m-mag-stripe"></div>
+              <div class="m-back-inner">
+                <div class="m-sig-strip">
+                  <img id="resCbSigImg" class="m-sig-img" src="" alt="Tanda Tangan">
+                  <span class="m-sig-watermark">DIGITAL SIGNATURE</span>
+                  <span class="m-cvv">SECURE</span>
+                </div>
+
+                <div class="m-benefits-list">
+                  <div class="m-b-item">
+                    <span>🛡️ Garansi Mesin User Error</span>
+                    <strong>Diskon 5-15%</strong>
+                  </div>
+                  <div class="m-b-item">
+                    <span>🎁 Reward Bawa Teman</span>
+                    <strong>Rp 25.000 / User</strong>
+                  </div>
+                </div>
+
+                <div class="m-back-foot">
+                  iGood Apple Store Kebumen • Masa Aktif 1 Tahun
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <p class="tap-hint">👆 Ketuk kartu untuk membalik sisi depan & belakang</p>
+
+        <!-- Member Meta Details -->
+        <div class="m-detail-card">
+          <div class="meta-row">
+            <span>Nomor ID Member</span>
+            <strong id="detailMemberId" class="gold-text">-</strong>
+          </div>
+          <div class="meta-row">
+            <span>Nama Pemilik</span>
+            <strong id="detailMemberName">-</strong>
+          </div>
+          <div class="meta-row">
+            <span>Masa Berlaku</span>
+            <strong id="detailValidity">-</strong>
+          </div>
+          <div class="meta-row">
+            <span>Nomor WhatsApp</span>
+            <strong id="detailPhone">-</strong>
+          </div>
+        </div>
+
+        <!-- Quick Action Delivery Buttons -->
+        <div class="m-action-stack">
+          <!-- WhatsApp Button -->
+          <a href="#" id="btnSendWa" class="m-btn m-btn-wa">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.007c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86.173.086.274.072.376-.043.101-.116.433-.506.549-.68.116-.173.231-.145.39-.086s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.099.824z"/>
+            </svg>
+            <span>Kirim Kartu ke WhatsApp Pelanggan</span>
+          </a>
+
+          <!-- Download Button -->
+          <button type="button" class="m-btn m-btn-download" onclick="downloadBothCards()">
+            <span>📥 Simpan Kartu ke Galeri HP (PNG)</span>
+          </button>
+
+          <!-- Email Button -->
+          <a href="#" id="btnSendEmail" class="m-btn m-btn-secondary">
+            <span>✉️ Kirim Bukti ke Email Member</span>
+          </a>
+        </div>
+
+      </div>
+
+      <!-- VIEW 3: DATA KASIR TOKO (MOBILE) -->
+      <div class="view-panel" id="view-database" style="display: none;">
+        <div class="m-db-header">
+          <div>
+            <h3>Data Member Toko</h3>
+            <p>Database pelanggan aktif di Kebumen</p>
+          </div>
+          <button type="button" class="m-btn-export" onclick="exportToCsv()">
+            📊 Export CSV
+          </button>
+        </div>
+
+        <div id="mMemberList" class="m-member-list">
+          <!-- Rendered via JS -->
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Bottom Navigation Bar (iOS App Style) -->
+    <nav class="mobile-bottom-nav">
+      <button class="nav-item active" data-tab="view-register" onclick="switchMobileTab('view-register')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+          <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+        </svg>
+        <span>Daftar</span>
+      </button>
+
+      <button class="nav-item" data-tab="view-card" onclick="switchMobileTab('view-card')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <line x1="2" y1="10" x2="22" y2="10"/>
+        </svg>
+        <span>Kartu Saya</span>
+      </button>
+
+      <button class="nav-item" data-tab="view-database" onclick="switchMobileTab('view-database')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+          <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+        <span>Kasir Toko</span>
+      </button>
+    </nav>
+
+  </div>
+
+  <!-- MODAL SYARAT & KETENTUAN (BOTTOM SHEET MOBILE) -->
+  <div class="modal-overlay" id="termsModal">
+    <div class="modal-sheet">
+      <div class="sheet-grabber"></div>
+      <div class="sheet-header">
+        <div>
+          <h3 style="margin: 0; font-size: 15px; font-weight: 800;">Syarat &amp; Ketentuan Resmi Member</h3>
+          <p style="margin: 2px 0 0 0; font-size: 10px; color: #1a5b9f; font-family: monospace;">DOKUMEN NO: 042/SK-MBR/iGOOD-KBM/IX/2026</p>
+        </div>
+        <button class="sheet-close" onclick="closeTermsModal()">&times;</button>
+      </div>
+      <div class="sheet-body" style="font-size: 11.5px; line-height: 1.6; color: #334155;">
+        <div style="text-align: center; border-bottom: 2px solid #0f172a; padding-bottom: 8px; margin-bottom: 10px;">
+          <strong style="text-transform: uppercase; font-size: 12px; color: #0f172a;">iGood Apple Store &amp; Service Kebumen</strong>
+          <div style="font-size: 10px; color: #64748b;">Surat Perjanjian Layanan Priority Care Membership (2026 / 2027)</div>
+        </div>
+
+        <h4 style="margin: 8px 0 3px 0; font-size: 11.5px; color: #0f172a; text-transform: uppercase;">BAB I: Ketentuan Umum &amp; Iuran</h4>
+        <p style="margin: 0 0 6px 0;"><strong>Pasal 1:</strong> Membership berlaku aktif selama <strong>12 bulan (1 tahun penuh)</strong> dengan iuran registrasi sebesar <strong>Rp 25.000,-</strong> yang divalidasi langsung berdasarkan <strong>Nomor Induk Kependudukan (No. KTP / NIK)</strong> resmi di Database toko.</p>
+
+        <h4 style="margin: 8px 0 3px 0; font-size: 11.5px; color: #0f172a; text-transform: uppercase;">BAB II: Hak &amp; Keuntungan Member</h4>
+        <p style="margin: 0 0 4px 0;"><strong>Pasal 2 (Diskon Servis Mesin 5% - 15%):</strong> Member berhak atas potongan biaya pengerjaan servis mesin termasuk terhadap kerusakan akibat kelalaian pemakaian pribadi (human / user error seperti kemasukan cairan, benturan, atau terjatuh).</p>
+        <p style="margin: 0 0 4px 0;"><strong>Pasal 3 (Reward Referral Tunai Rp 25.000):</strong> Member menerima komisi tunai langsung Rp 25.000,- per unit setiap kali mereferensikan rekan/keluarga yang membeli iPhone, iPad, atau MacBook di gerai iGood Kebumen.</p>
+        <p style="margin: 0 0 6px 0;"><strong>Pasal 4 (Diagnosa Gratis &amp; Antrean VIP):</strong> Pembebasan biaya jasa (Rp 0) untuk pengecekan unit, diagnosis baterai, transfer iCloud, serta antrean prioritas teknisi.</p>
+
+        <h4 style="margin: 8px 0 3px 0; font-size: 11.5px; color: #0f172a; text-transform: uppercase;">BAB III: Tata Cara Klaim &amp; Validasi</h4>
+        <p style="margin: 0 0 6px 0;"><strong>Pasal 5:</strong> Saat klaim diskon servis atau pencairan referral, member wajib menunjukkan kartu digital 3D atau menyebutkan No. KTP terdaftar. Hak membership melekat pada pemilik identitas terdaftar (non-transferable).</p>
+
+        <h4 style="margin: 8px 0 3px 0; font-size: 11.5px; color: #0f172a; text-transform: uppercase;">BAB IV: Kekuatan Hukum Tanda Tangan</h4>
+        <p style="margin: 0 0 8px 0;"><strong>Pasal 6:</strong> Tanda tangan digital pada saat pendaftaran diakui sah memiliki kekuatan pembuktian penuh dan mengikat sebagai kesepakatan resmi dua belah pihak.</p>
+      </div>
+      <div class="sheet-footer">
+        <button type="button" class="btn-activate-mobile" onclick="closeTermsModal()">Saya Mengerti</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="card-generator.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

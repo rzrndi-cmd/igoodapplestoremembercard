@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html class="scroll-smooth" lang="id">
+<head>
+  <meta charset="utf-8"/>
+  <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" name="viewport"/>
+  <title>iGood Apple Store Kebumen | Monitoring &amp; Verifikasi Keaslian Member Card</title>
+  <meta name="theme-color" content="#1a5b9f"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+
+  <link rel="icon" type="image/png" href="IGOOD LOGO.png"/>
+  <link rel="apple-touch-icon" href="IGOOD LOGO.png"/>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Merriweather:ital,wght@0,300;0,400;0,700;0,900;1,300;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"/>
+
+  <!-- Cloud Database Client -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#f0f6fc',
+              100: '#e1eefb',
+              200: '#b9d5f3',
+              300: '#82b3e5',
+              400: '#4b8ed3',
+              500: '#2672be',
+              600: '#1a5b9f', // Warna Biru Resmi Logo iGood (#1A5B9F)
+              700: '#14487f',
+              800: '#0f3864',
+              900: '#0a2747',
+              950: '#05162a'
+            },
+            sapphire: {
+              950: '#030d1a',
+              900: '#071c35',
+              850: '#0c2a4e',
+              800: '#113e70',
+              700: '#14487f',
+              600: '#1a5b9f'
+            },
+            ink: {
+              950: '#090d16',
+              900: '#0f172a',
+              800: '#1e293b',
+              700: '#334155',
+              500: '#64748b',
+              400: '#94a3b8'
+            }
+          },
+          fontFamily: {
+            display: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"Space Grotesk"', 'monospace'],
+            script: ['"Caveat"', 'cursive'],
+            legal: ['"Merriweather"', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* 3D Card Engine */
+    .perspective-1200 { perspective: 1200px; }
+    .transform-style-preserve-3d {
+      transform-style: preserve-3d;
+      transition: transform 0.7s cubic-bezier(0.2, 0.85, 0.25, 1);
+    }
+    .backface-hidden {
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+    }
+    .rotate-y-180 {
+      transform: rotateY(180deg);
+    }
+    .card-flipped {
+      transform: rotateY(180deg);
+    }
+
+    /* Royal Blue & Ocean Metallic Textures matching #1a5b9f */
+    .card-face-front {
+      background:
+        radial-gradient(circle at 75% 25%, rgba(75, 142, 211, 0.42) 0%, transparent 50%),
+        radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 42%),
+        repeating-radial-gradient(circle at 60% 45%, rgba(255,255,255,0.02) 0 1px, transparent 1px 3px),
+        linear-gradient(135deg, #1a5b9f 0%, #0f3a67 52%, #0a2747 100%);
+      box-shadow:
+        0 22px 45px -12px rgba(10, 39, 71, 0.55),
+        0 0 0 1px rgba(130, 179, 229, 0.4),
+        inset 0 1px 1px rgba(255, 255, 255, 0.35);
+    }
+
+    .card-face-back {
+      background:
+        radial-gradient(circle at 50% 10%, rgba(75, 142, 211, 0.22) 0%, transparent 45%),
+        linear-gradient(145deg, #14487f 0%, #08203c 60%, #0d2d52 100%);
+      box-shadow:
+        0 22px 45px -12px rgba(10, 39, 71, 0.55),
+        0 0 0 1px rgba(130, 179, 229, 0.25),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    }
+
+    /* Chrome & Platinum Smart Chip */
+    .emv-chip-real {
+      position: relative;
+      background: linear-gradient(135deg, #e2e8f0 0%, #ffffff 45%, #94a3b8 100%);
+      border-radius: 6px;
+      box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0,0,0,0.25);
+      overflow: hidden;
+    }
+    .emv-chip-real::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, transparent 32%, rgba(0,0,0,0.25) 32%, rgba(0,0,0,0.25) 36%, transparent 36%, transparent 64%, rgba(0,0,0,0.25) 64%, rgba(0,0,0,0.25) 68%, transparent 68%),
+        linear-gradient(to bottom, transparent 46%, rgba(0,0,0,0.25) 46%, rgba(0,0,0,0.25) 54%, transparent 54%);
+    }
+    .emv-chip-real::after {
+      content: '';
+      position: absolute;
+      top: 25%;
+      left: 20%;
+      right: 20%;
+      bottom: 25%;
+      border: 1px solid rgba(0,0,0,0.2);
+      border-radius: 2px;
+    }
+
+    /* Magnetic Stripe */
+    .mag-stripe-strip {
+      background: linear-gradient(180deg, #030712 0%, #0a2747 50%, #05162a 100%);
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.9);
+    }
+
+    /* Hide scrollbars */
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    /* Active Tab Style */
+    .nav-tab-btn.active {
+      color: #1a5b9f;
+      background-color: #ffffff;
+      box-shadow: 0 2px 6px rgba(26, 91, 159, 0.16);
+    }
+    .nav-tab-btn.active svg {
+      stroke: #1a5b9f;
+    }
+
+    /* Formal Legal Document Print Styles */
+    @media print {
+      body {
+        background: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+      }
+      header, nav, #app-bottom-nav, .no-print, #tab-content-verify, #tab-content-monitor, #tab-content-register, #edit-member-modal {
+        display: none !important;
+      }
+      #tab-content-terms {
+        display: block !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .legal-document-sheet {
+        box-shadow: none !important;
+        border: none !important;
+        padding: 12mm !important;
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-ink-900 font-display antialiased min-h-screen flex justify-center pb-20 select-none">
+
+<!-- Mobile Frame Container (White & Blue Theme) -->
+<div class="w-full max-w-[460px] bg-slate-50 relative min-h-screen flex flex-col border-x border-slate-200/80 shadow-2xl">
+
+  <!-- TOP APP BAR -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 pt-3.5 pb-3">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-2.5">
+        <!-- Official iGood Logo -->
+        <img src="IGOOD LOGO.png" alt="iGood Apple Store Kebumen" class="w-9 h-9 rounded-full object-cover shadow-sm ring-1 ring-slate-200 shrink-0 bg-white" />
+        <div>
+          <h1 class="text-[15px] font-bold tracking-tight text-ink-900 flex items-center gap-1.5">
+            iGood <span class="text-brand-700">Kebumen</span>
+          </h1>
+          <p class="text-[11px] text-ink-500 leading-none mt-0.5">Monitoring Member &amp; Verifikasi Keaslian</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-1.5">
+        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700" id="cloud-status-badge">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" id="cloud-status-dot"></span>
+          <span id="cloud-status-text">DATABASE CLOUD</span>
+        </span>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN NAVIGATION TABS (4 PILLARS) -->
+  <div class="px-3 pt-3">
+    <nav class="grid grid-cols-4 gap-1 p-1 bg-slate-200/70 rounded-xl border border-slate-200 text-[10.5px] font-semibold text-ink-500">
+      <button class="nav-tab-btn active py-2 px-0.5 rounded-lg transition-all flex flex-col items-center justify-center gap-1 text-center" id="tab-btn-verify">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span class="truncate leading-none">Keaslian</span>
+      </button>
+      <button class="nav-tab-btn py-2 px-0.5 rounded-lg transition-all flex flex-col items-center justify-center gap-1 text-center" id="tab-btn-monitor">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="truncate leading-none">Monitoring</span>
+      </button>
+      <button class="nav-tab-btn py-2 px-0.5 rounded-lg transition-all flex flex-col items-center justify-center gap-1 text-center" id="tab-btn-register">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span class="truncate leading-none">Daftar</span>
+      </button>
+      <button class="nav-tab-btn py-2 px-0.5 rounded-lg transition-all flex flex-col items-center justify-center gap-1 text-center" id="tab-btn-terms">
+        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="truncate leading-none">S&amp;K</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- MAIN VIEWPORT -->
+  <main class="flex-1 px-4 pt-3 pb-6 space-y-4">
+
+    <!-- ========================================================
+         TAB 1: PENGECEKAN KEASLIAN MEMBER CARD & RIWAYAT KLAIM
+         ======================================================== -->
+    <section class="space-y-3.5" id="tab-content-verify">
+
+      <!-- Fast Verification Search Box -->
+      <div class="bg-white rounded-xl border border-slate-200 p-3 shadow-sm space-y-2">
+        <label class="block text-[11px] font-bold text-ink-700 uppercase tracking-wider">
+          🔍 Validasi Keaslian Berdasarkan ID Kartu Identitas:
+        </label>
+        <div class="flex gap-2">
+          <div class="relative flex-1">
+            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-2 text-[12.5px] text-ink-900 font-mono focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600" id="verify-search-input" placeholder="Masukkan ID Kartu Identitas (No. KTP / ID Member)" type="text" value="3305012309990001"/>
+            <svg class="absolute left-2.5 top-2.5 text-ink-400" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          </div>
+          <button class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-[12px] rounded-lg shadow-sm transition" id="btn-do-verify" type="button">
+            Cek
+          </button>
+        </div>
+      </div>
+
+      <!-- Authenticity Verification Status Banner -->
+      <div class="rounded-xl border p-3.5 flex items-center justify-between shadow-sm transition-all" id="auth-status-box">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 shrink-0 text-lg" id="auth-status-icon">
+            ✓
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="font-bold text-[13px] text-emerald-700 tracking-tight" id="auth-status-title">
+                KARTU ASLI &amp; TERVERIFIKASI RESMI
+              </h3>
+            </div>
+            <p class="text-[10.5px] text-ink-500" id="auth-status-desc">
+              Terdaftar resmi di database iGood Apple Store Kebumen
+            </p>
+          </div>
+        </div>
+        <span class="px-2 py-1 rounded bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-bold font-mono" id="auth-status-tag">
+          VALID
+        </span>
+      </div>
+
+      <!-- 3D Card Scene (Proof of Genuine Card) -->
+      <div class="space-y-1.5" id="verified-card-section">
+        <div class="flex items-center justify-between px-1">
+          <span class="text-[11px] font-bold text-ink-600 uppercase tracking-wide">Fisik Digital Terdaftar</span>
+          <button id="btn-manual-flip" class="text-[10.5px] font-semibold text-brand-700 hover:text-brand-800 flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-brand-200 shadow-xs">
+            <span>Balik Kartu</span>
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M20 8a8 8 0 0 0-14.6-4M4 16a8 8 0 0 0 14.6 4"/></svg>
+          </button>
+        </div>
+
+        <div class="perspective-1200 w-full cursor-pointer" id="card-flipper-container" title="Ketuk untuk membalik kartu">
+          <div class="transform-style-preserve-3d relative w-full aspect-[1.586/1] rounded-2xl" id="card-inner">
+
+            <!-- FRONT SIDE -->
+            <div class="backface-hidden absolute inset-0 rounded-2xl card-face-front p-4 sm:p-5 flex flex-col justify-between overflow-hidden text-white">
+              <div class="flex items-start justify-between relative z-10">
+                <div class="flex items-center gap-2.5">
+                  <div class="w-10 h-10 rounded-full bg-white p-0.5 shrink-0 shadow-md ring-1 ring-white/30">
+                    <img src="IGOOD LOGO.png" alt="iGood Apple Store Logo" class="w-full h-full rounded-full object-cover"/>
+                  </div>
+                  <div>
+                    <h3 class="font-bold text-[14px] leading-tight tracking-tight bg-gradient-to-r from-white via-blue-100 to-blue-200 bg-clip-text text-transparent">
+                      iGood Apple Store Kebumen
+                    </h3>
+                    <div class="inline-flex items-center mt-0.5 px-2 py-0.5 rounded-full bg-white text-brand-800 font-bold text-[8px] tracking-wider shadow-sm">
+                      PRIORITY CARE MEMBER
+                    </div>
+                  </div>
+                </div>
+                <div class="text-white/60 pt-0.5">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M8.5 16.5a5 5 0 0 1 0-9"/>
+                    <path d="M12 19a8.5 8.5 0 0 0 0-14"/>
+                    <path d="M15.5 21.5a12 12 0 0 0 0-19"/>
+                  </svg>
+                </div>
+              </div>
+
+              <!-- Platinum EMV Chip -->
+              <div class="relative z-10 my-0.5">
+                <div class="w-10 h-7 emv-chip-real"></div>
+              </div>
+
+              <div class="flex items-end justify-between relative z-10 pt-1">
+                <div class="space-y-0.5">
+                  <div>
+                    <span class="text-[8.5px] uppercase tracking-wider text-brand-200 block font-medium">Name:</span>
+                    <p class="font-bold text-[13px] tracking-wide text-white uppercase truncate max-w-[210px]" id="card-display-name">
+                      AHMAD FAUZI
+                    </p>
+                  </div>
+                  <div class="text-[9.5px] space-y-0.5 font-mono">
+                    <p class="text-brand-300 font-semibold tracking-wide">
+                      Membership ID: <span id="card-display-id">IG-KBM-2026-0889</span>
+                    </p>
+                    <p class="text-brand-200 font-normal">
+                      No. Identitas: <span class="text-white font-medium" id="card-display-ktp">3305012309990001</span>
+                    </p>
+                    <p class="text-brand-200 font-normal">
+                      Validity: <span class="text-white font-medium" id="card-display-valid">09/26 - 09/27</span>
+                    </p>
+                    <p class="text-brand-200 font-normal flex items-center gap-1.5 pt-0.5 font-sans">
+                      <span>Riwayat Klaim:</span>
+                      <span class="px-1.5 py-0.5 rounded bg-white/20 text-white font-bold text-[9px]" id="card-display-claims">0x Klaim</span>
+                    </p>
+                  </div>
+                </div>
+
+                <div class="p-1.5 bg-white rounded-xl shrink-0 shadow-lg border border-blue-900/20">
+                  <img id="card-qr-image" alt="QR Verifikasi" class="w-12 h-12 object-contain rounded-md" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=IG-KBM-2026-0889"/>
+                </div>
+              </div>
+            </div>
+
+            <!-- BACK SIDE -->
+            <div class="backface-hidden rotate-y-180 absolute inset-0 rounded-2xl card-face-back flex flex-col justify-between overflow-hidden text-white">
+              <div class="mag-stripe-strip w-full h-8 mt-3"></div>
+
+              <div class="px-4 sm:px-5">
+                <div class="bg-white h-9 rounded-md flex items-center justify-between px-3 relative overflow-hidden shadow-inner border border-white/40">
+                  <div class="flex-1 flex items-center">
+                    <img id="card-signature-img" class="h-7 max-w-[190px] object-contain hidden" alt="Signature"/>
+                    <span class="font-script text-xl text-brand-900 font-bold tracking-wide transform -rotate-1 select-none" id="card-signature-fallback">
+                      Ahmad Fauzi
+                    </span>
+                  </div>
+                  <span class="text-[8.5px] font-mono font-bold text-brand-800 tracking-wider">SECURE PASS</span>
+                </div>
+                <p class="text-[8px] text-brand-200 text-center mt-0.5 tracking-wider uppercase font-medium">Digital Signature Resmi Member</p>
+              </div>
+
+              <div class="px-4 sm:px-5">
+                <div class="bg-sapphire-900/90 border border-brand-400/30 rounded-xl p-2 space-y-1">
+                  <div class="flex items-center justify-between text-[9.5px]">
+                    <span class="text-brand-200 font-semibold">Garansi Mesin User Error:</span>
+                    <span class="text-white font-bold">Diskon 5-15%</span>
+                  </div>
+                  <div class="flex items-center justify-between text-[9.5px] border-t border-brand-500/25 pt-1">
+                    <span class="text-brand-200 font-semibold">Total Pernah Klaim:</span>
+                    <span class="text-amber-300 font-bold" id="card-back-display-claims">0 Kali</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="px-4 sm:px-5 pb-3 text-center space-y-0.5">
+                <div class="flex items-center justify-center gap-1.5 text-[9px] text-brand-100">
+                  <img src="IGOOD LOGO.png" alt="iGood" class="w-3.5 h-3.5 rounded-full bg-white inline-block shadow-xs shrink-0"/>
+                  <span>Customer Support: 08761 253 0880</span>
+                  <span>·</span>
+                  <span>Kebumen</span>
+                </div>
+                <p class="text-[8px] text-brand-200">Address: iGood Apple Store Kebumen, Kebumen, Indonesia</p>
+              </div>
+
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================
+         TAB 2: MONITORING DATA SELURUH MEMBER TOKO
+         ======================================================== -->
+    <section class="hidden space-y-3.5" id="tab-content-monitor">
+      
+      <!-- Metrics Overview -->
+      <div class="grid grid-cols-3 gap-2">
+        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-center shadow-xs">
+          <span class="text-[9.5px] font-bold text-ink-400 uppercase tracking-wider block">Total Member</span>
+          <strong class="text-xl font-extrabold text-brand-700 font-mono mt-0.5 block" id="metric-total-members">1</strong>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-center shadow-xs">
+          <span class="text-[9.5px] font-bold text-ink-400 uppercase tracking-wider block">Total Klaim</span>
+          <strong class="text-xl font-extrabold text-brand-700 font-mono mt-0.5 block" id="metric-total-claims">2</strong>
+        </div>
+        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-center shadow-xs">
+          <span class="text-[9.5px] font-bold text-ink-400 uppercase tracking-wider block">Status Pass</span>
+          <strong class="text-[12px] font-bold text-emerald-600 mt-1 block">100% AKTIF</strong>
+        </div>
+      </div>
+
+      <!-- Member Monitoring Table/List -->
+      <div class="bg-white rounded-xl border border-slate-200 p-3.5 space-y-3 shadow-sm">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-[13px] font-bold text-ink-900">Monitoring Data Pelanggan</h3>
+            <p class="text-[10.5px] text-ink-500">Database &amp; rekap frekuensi klaim garansi</p>
+          </div>
+          <button class="px-2.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-xs transition" id="btn-export-csv" type="button">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Ekspor CSV</span>
+          </button>
+        </div>
+
+        <!-- Real-time Filter -->
+        <div class="relative">
+          <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-2 text-[12px] text-ink-900 focus:outline-none focus:border-brand-600" id="monitor-search-input" placeholder="Cari ID kartu identitas, nama, ID member, atau WhatsApp..." type="text"/>
+          <svg class="absolute left-2.5 top-2.5 text-ink-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        </div>
+
+        <!-- Member Records -->
+        <div class="space-y-2.5 max-h-[380px] overflow-y-auto hide-scrollbar" id="monitor-member-list">
+          <!-- Rendered dynamically -->
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ========================================================
+         TAB 3: REGISTRASI MEMBER BARU TOKO
+         ======================================================== -->
+    <section class="hidden space-y-3.5" id="tab-content-register">
+      <div class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="flex items-center gap-3">
+          <img src="IGOOD LOGO.png" alt="iGood Apple Store" class="w-10 h-10 rounded-full object-cover shadow-xs border border-brand-100 shrink-0 bg-white" />
+          <div>
+            <h3 class="text-[14px] font-bold text-ink-900 leading-tight">Aktivasi Member Baru di Toko</h3>
+            <p class="text-[11px] text-ink-500 mt-0.5">Daftarkan pelanggan ke sistem database resmi. Iuran Rp 25.000 / th.</p>
+          </div>
+        </div>
+
+        <form class="space-y-3 mt-3.5" id="membership-form">
+          <div>
+            <label class="block text-[11px] font-semibold text-ink-800 mb-1">Nama Lengkap (Sesuai KTP) *</label>
+            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12.5px] text-ink-900 focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600" id="reg-name" placeholder="Contoh: Ahmad Fauzi" required type="text"/>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-ink-800 mb-1">ID Kartu Identitas (Nomor KTP / NIK) *</label>
+            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12.5px] text-ink-900 font-mono focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600" id="reg-ktp" placeholder="Nomor KTP / NIK 16 digit" required type="text"/>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-ink-800 mb-1">Nomor WhatsApp Aktif *</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2 text-[12px] text-ink-400 font-mono">+62</span>
+              <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-11 pr-3 py-2 text-[12.5px] text-ink-900 font-mono focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600" id="reg-phone" placeholder="81234567890" required type="tel"/>
+            </div>
+          </div>
+
+          <!-- Benefit & Agreement Summary Before Digital Signature -->
+          <div class="rounded-xl bg-brand-50/70 border border-brand-200/90 p-3 space-y-2">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-brand-800 uppercase tracking-wide flex items-center gap-1.5">
+                <span>🌟</span> Keuntungan Menjadi Member:
+              </span>
+              <button type="button" onclick="goToTermsTab()" class="text-[10px] font-bold text-brand-600 hover:text-brand-700 underline flex items-center gap-0.5">
+                <span>Baca S&amp;K Lengkap</span>
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+              </button>
+            </div>
+            
+            <div class="grid grid-cols-1 gap-1 text-[11px] text-ink-700">
+              <div class="flex items-start gap-1.5">
+                <span class="text-brand-600 font-bold shrink-0 mt-0.5">✓</span>
+                <span><strong>Diskon Servis Mesin 5% - 15%:</strong> Termasuk kerusakan karena kelalaian (user error).</span>
+              </div>
+              <div class="flex items-start gap-1.5">
+                <span class="text-brand-600 font-bold shrink-0 mt-0.5">✓</span>
+                <span><strong>Reward Referral Rp 25.000:</strong> Bonus tunai setiap bawa teman beli HP di iGood Kebumen.</span>
+              </div>
+              <div class="flex items-start gap-1.5">
+                <span class="text-brand-600 font-bold shrink-0 mt-0.5">✓</span>
+                <span><strong>Prioritas Antrean &amp; Bebas Biaya Jasa:</strong> Cek unit, diagnosis baterai, &amp; backup iCloud gratis.</span>
+              </div>
+              <div class="flex items-start gap-1.5">
+                <span class="text-brand-600 font-bold shrink-0 mt-0.5">✓</span>
+                <span><strong>Masa Aktif 1 Tahun Resmi:</strong> Data terdaftar aman di Cloud Database dengan riwayat klaim transparan.</span>
+              </div>
+            </div>
+
+            <div class="pt-1.5 border-t border-brand-200/70">
+              <label class="flex items-start gap-2 cursor-pointer select-none">
+                <input type="checkbox" id="reg-agree-terms" required class="mt-0.5 w-4 h-4 rounded border-slate-300 text-brand-600 focus:ring-brand-500 shrink-0"/>
+                <span class="text-[10px] text-ink-600 leading-snug">
+                  Saya telah membaca dan menyetujui seluruh <strong>Keuntungan serta Syarat &amp; Ketentuan (S&amp;K)</strong> (<button type="button" onclick="goToTermsTab()" class="text-brand-600 font-bold underline hover:text-brand-700">Lihat Dokumen Resmi</button>) sebelum menandatangani pendaftaran member.
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <!-- Signature Pad -->
+          <div class="space-y-1 pt-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <label class="text-[11px] font-semibold text-ink-800 block leading-tight">Persetujuan Tanda Tangan Digital *</label>
+                <span class="text-[9.5px] text-ink-500">Sentuh layar untuk membubuhkan tanda tangan sah</span>
+              </div>
+              <button class="text-[10.5px] text-brand-700 hover:text-brand-800 font-semibold shrink-0" id="btn-clear-canvas" type="button">Ulangi Coretan</button>
+            </div>
+            <div class="relative bg-white rounded-lg overflow-hidden border border-slate-300 shadow-inner">
+              <canvas class="w-full h-24 touch-none cursor-crosshair bg-white" height="120" id="signature-canvas" width="380"></canvas>
+              <div class="pointer-events-none absolute inset-0 flex items-center justify-center text-[11px] text-ink-400 font-medium" id="sign-placeholder">
+                ✍️ Goreskan tanda tangan pelanggan di sini
+              </div>
+            </div>
+          </div>
+
+          <button class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-[13px] shadow-md transition" type="submit">
+            Simpan &amp; Terbitkan Kartu Member (Rp 25.000)
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         TAB 4: SYARAT & KETENTUAN (S&K) MEMBER (SIMPEL & JELAS)
+         ======================================================== -->
+    <section class="hidden space-y-3.5" id="tab-content-terms">
+
+      <!-- Simple Policy Container -->
+      <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-5 shadow-sm space-y-4 text-ink-900">
+
+        <!-- Header Ringkas Toko -->
+        <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+          <img src="IGOOD LOGO.png" alt="Logo iGood" class="w-11 h-11 rounded-full object-cover shrink-0 border border-slate-200 shadow-2xs bg-white" />
+          <div class="flex-1">
+            <div class="flex items-center justify-between">
+              <h3 class="text-[13.5px] font-bold text-ink-900 font-display">
+                Syarat &amp; Ketentuan Member
+              </h3>
+              <span class="px-2 py-0.5 rounded-full bg-brand-50 border border-brand-200 text-brand-700 text-[9.5px] font-mono font-bold">
+                RESMI
+              </span>
+            </div>
+            <p class="text-[10.5px] text-ink-500 mt-0.5">
+              Priority Care · iGood Apple Store &amp; Service Kebumen
+            </p>
+          </div>
+        </div>
+
+        <!-- 3 Highlight Pills -->
+        <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
+          <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-ink-400 block text-[9px]">Iuran Member</span>
+            <strong class="text-brand-700 text-[11px]">Rp 25.000</strong>
+            <span class="text-ink-400 block text-[8.5px]">/ 1 Tahun</span>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-ink-400 block text-[9px]">Masa Aktif</span>
+            <strong class="text-emerald-700 text-[11px]">12 Bulan</strong>
+            <span class="text-ink-400 block text-[8.5px]">365 Hari</span>
+          </div>
+          <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-ink-400 block text-[9px]">Validasi Data</span>
+            <strong class="text-ink-800 text-[11px]">No. KTP</strong>
+            <span class="text-ink-400 block text-[8.5px]">Cloud Database</span>
+          </div>
+        </div>
+
+        <!-- Daftar Poin S&K Ringkas & Jelas -->
+        <div class="space-y-2.5 text-[11px] text-ink-700">
+
+          <!-- 1. Diskon Servis -->
+          <div class="p-3 rounded-xl bg-slate-50/70 border border-slate-200/70 space-y-1">
+            <div class="flex items-center gap-2 font-bold text-ink-900 text-[11.5px]">
+              <span class="w-5 h-5 rounded-md bg-brand-100 text-brand-700 flex items-center justify-center text-xs shrink-0">🛡️</span>
+              <span>1. Diskon Servis Mesin (5% - 15%)</span>
+            </div>
+            <p class="text-[10.5px] leading-relaxed text-ink-600 pl-7">
+              Member berhak atas potongan biaya servis mesin <strong>5% hingga 15%</strong> di lab teknisi iGood Kebumen. Menariknya, jaminan diskon ini <strong>tetap berlaku untuk kerusakan akibat kelalaian pemakaian (human / user error)</strong> seperti terkena cairan ringan, benturan fisik, atau jatuh.
+            </p>
+          </div>
+
+          <!-- 2. Reward Referral -->
+          <div class="p-3 rounded-xl bg-slate-50/70 border border-slate-200/70 space-y-1">
+            <div class="flex items-center gap-2 font-bold text-ink-900 text-[11.5px]">
+              <span class="w-5 h-5 rounded-md bg-amber-100 text-amber-700 flex items-center justify-center text-xs shrink-0">🎁</span>
+              <span>2. Reward Referral Tunai Rp 25.000</span>
+            </div>
+            <p class="text-[10.5px] leading-relaxed text-ink-600 pl-7">
+              Dapatkan bonus uang tunai <strong>Rp 25.000,- langsung per unit</strong> setiap kali mereferensikan teman atau keluarga yang membeli iPhone, iPad, atau MacBook di toko iGood Kebumen dengan menyertakan No. KTP Anda.
+            </p>
+          </div>
+
+          <!-- 3. Free Jasa & Antrean Prioritas -->
+          <div class="p-3 rounded-xl bg-slate-50/70 border border-slate-200/70 space-y-1">
+            <div class="flex items-center gap-2 font-bold text-ink-900 text-[11.5px]">
+              <span class="w-5 h-5 rounded-md bg-indigo-100 text-indigo-700 flex items-center justify-center text-xs shrink-0">⚡</span>
+              <span>3. Bebas Biaya Jasa &amp; Antrean Prioritas</span>
+            </div>
+            <p class="text-[10.5px] leading-relaxed text-ink-600 pl-7">
+              Pembebasan biaya jasa (<strong>Rp 0,- gratis</strong>) untuk pemeriksaan menyeluruh (<em>general checkup</em>), tes kesehatan baterai, migrasi data iCloud, serta antrean pengerjaan teknisi yang diprioritaskan.
+            </p>
+          </div>
+
+          <!-- 4. Masa Berlaku & Fisik Digital -->
+          <div class="p-3 rounded-xl bg-slate-50/70 border border-slate-200/70 space-y-1">
+            <div class="flex items-center gap-2 font-bold text-ink-900 text-[11.5px]">
+              <span class="w-5 h-5 rounded-md bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs shrink-0">💳</span>
+              <span>4. Masa Aktif &amp; Kartu Digital 3D</span>
+            </div>
+            <p class="text-[10.5px] leading-relaxed text-ink-600 pl-7">
+              Masa aktif keanggotaan berlaku selama <strong>1 tahun penuh (12 bulan)</strong> sejak tanggal aktivasi dan dapat diperpanjang. Member mendapatkan kartu digital interaktif 3D dengan QR-Code otentikasi unik.
+            </p>
+          </div>
+
+          <!-- 5. Tata Cara Klaim -->
+          <div class="p-3 rounded-xl bg-slate-50/70 border border-slate-200/70 space-y-1">
+            <div class="flex items-center gap-2 font-bold text-ink-900 text-[11.5px]">
+              <span class="w-5 h-5 rounded-md bg-rose-100 text-rose-700 flex items-center justify-center text-xs shrink-0">📌</span>
+              <span>5. Tata Cara Klaim &amp; Kepemilikan</span>
+            </div>
+            <p class="text-[10.5px] leading-relaxed text-ink-600 pl-7">
+              Saat bertransaksi, cukup tunjukkan kartu digital atau sebutkan No. KTP Anda. Keanggotaan bersifat melekat pada pemilik data terdaftar (<em>non-transferable</em>) dan berlaku untuk perangkat Apple pribadi atau keluarga inti.
+            </p>
+          </div>
+
+          <!-- 6. Persetujuan Tanda Tangan -->
+          <div class="p-3 rounded-xl bg-slate-50/70 border border-slate-200/70 space-y-1">
+            <div class="flex items-center gap-2 font-bold text-ink-900 text-[11.5px]">
+              <span class="w-5 h-5 rounded-md bg-teal-100 text-teal-700 flex items-center justify-center text-xs shrink-0">✍️</span>
+              <span>6. Keabsahan Tanda Tangan Digital</span>
+            </div>
+            <p class="text-[10.5px] leading-relaxed text-ink-600 pl-7">
+              Tanda tangan digital yang dibubuhkan pada layar sentuh saat pendaftaran merupakan bukti persetujuan sah dan mengikat atas seluruh ketentuan di atas.
+            </p>
+          </div>
+
+        </div>
+
+        <!-- Kolom Pengesahan Ringkas -->
+        <div class="pt-3 border-t border-slate-100 grid grid-cols-2 gap-2 text-center text-[10px]">
+          <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80 flex flex-col items-center justify-between min-h-[72px]">
+            <span class="font-bold text-ink-700">Pihak Member</span>
+            <span class="font-script text-base text-brand-900 font-bold tracking-wide select-none">Tanda Tangan Digital</span>
+            <span class="text-[8.5px] text-ink-400 font-mono">[Sesuai ID KTP]</span>
+          </div>
+
+          <div class="p-2 rounded-xl bg-brand-50/60 border border-brand-200 flex flex-col items-center justify-between min-h-[72px]">
+            <span class="font-bold text-brand-900">Manajemen Toko</span>
+            <div class="my-0.5 inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-white border border-brand-300 text-brand-700 font-bold font-mono text-[8.5px]">
+              <span>✓</span> RESMI &amp; SAH
+            </div>
+            <span class="text-[8.5px] text-brand-700 font-semibold font-mono">iGood Kebumen</span>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Utama -->
+        <div class="pt-1">
+          <button type="button" onclick="goToRegisterTab()" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-[12px] shadow-sm transition flex items-center justify-center gap-1.5 font-display">
+            <span>Saya Paham &amp; Lanjut Daftar Member</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- MODAL: EDIT DATA MEMBER -->
+  <div class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-end sm:items-center justify-center p-3" id="edit-member-modal">
+    <div class="bg-white border border-slate-200 w-full max-w-sm rounded-2xl p-4 space-y-3 shadow-2xl">
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <div>
+          <h4 class="font-bold text-[13.5px] text-ink-900">Edit Data Member</h4>
+          <p class="text-[10px] text-brand-700 font-mono" id="edit-modal-subtitle">ID: IG-KBM-2026-0889</p>
+        </div>
+        <button class="text-ink-400 hover:text-ink-700 text-lg font-bold" onclick="closeEditMemberModal()">&times;</button>
+      </div>
+
+      <form class="space-y-2.5" id="form-edit-member">
+        <input type="hidden" id="edit-original-id"/>
+
+        <div>
+          <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">Nama Lengkap (Sesuai KTP) *</label>
+          <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-ink-900 focus:outline-none focus:border-brand-600" id="edit-input-name" required type="text"/>
+        </div>
+
+        <div>
+          <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">ID Kartu Identitas (Nomor KTP / NIK) *</label>
+          <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-ktp" required type="text"/>
+        </div>
+
+        <div>
+          <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">Nomor WhatsApp *</label>
+          <div class="relative">
+            <span class="absolute left-3 top-2 text-[12px] text-ink-400 font-mono">+62</span>
+            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-11 pr-3 py-2 text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-phone" required type="tel"/>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-2">
+          <div>
+            <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">Masa Berlaku Kartu</label>
+            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-validity" placeholder="09/26 - 09/27" type="text"/>
+          </div>
+          <div>
+            <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">Total Klaim (Kali)</label>
+            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-claims" min="0" type="number" value="0"/>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 pt-1.5">
+          <button class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-ink-700 font-bold rounded-xl text-[12px] transition" onclick="closeEditMemberModal()" type="button">
+            Batal
+          </button>
+          <button class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-[12px] shadow-sm transition" type="submit">
+            Simpan Perubahan
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+</div>
+
+<!-- APPLICATION JAVASCRIPT: MONITORING & VERIFICATION ENGINE -->
+<script>
+  /* =========================================================
+     1. CLOUD DATABASE INTEGRATION & LOCAL DATABASE
+     ========================================================= */
+  const CLOUD_DB_URL = 'https://ypzdwdtqwhbfzzudsxds.supabase.co';
+  const CLOUD_DB_KEY = 'sb_publishable_mT4_zRvXEJC8msjP91z_AA_gdpIQfTm';
+
+  let cloudDbClient = null;
+  if (window.supabase && window.supabase.createClient) {
+    try {
+      cloudDbClient = window.supabase.createClient(CLOUD_DB_URL, CLOUD_DB_KEY);
+    } catch (err) {
+      console.warn('Inisialisasi database client bermasalah:', err);
+    }
+  }
+
+  const STORAGE_KEY = 'igood_members_v3';
+  let membersDb = [];
+  let currentVerifiedMember = null;
+
+  function updateCloudStatus(status, text) {
+    const badge = document.getElementById('cloud-status-badge');
+    const dot = document.getElementById('cloud-status-dot');
+    const label = document.getElementById('cloud-status-text');
+    if (!badge || !dot || !label) return;
+
+    if (status === 'connected') {
+      badge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700';
+      dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
+      label.innerText = text || 'DATABASE CLOUD';
+    } else if (status === 'syncing') {
+      badge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 border border-brand-200 text-[10px] font-bold text-brand-700';
+      dot.className = 'w-1.5 h-1.5 rounded-full bg-brand-500 animate-ping';
+      label.innerText = text || 'MENYINKRONKAN...';
+    } else {
+      badge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-bold text-amber-700';
+      dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500';
+      label.innerText = text || 'MODE LOKAL';
+    }
+  }
+
+  function loadMembersDb() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        membersDb = JSON.parse(raw).map(m => ({
+          ...m,
+          ktp: m.ktp || (m.imei ? '330501230999' + m.imei : '3305012309990889')
+        }));
+      } else {
+        // Initial Demo Member
+        membersDb = [{
+          id: 'IG-KBM-2026-0889',
+          name: 'Ahmad Fauzi',
+          ktp: '3305012309990001',
+          phone: '87612530880',
+          validity: '09/26 - 09/27',
+          signatureData: null,
+          registeredAt: '2026-09-08T08:00:00.000Z',
+          claimCount: 2
+        }];
+        saveMembersDb();
+      }
+    } catch (e) {
+      console.error(e);
+      membersDb = [];
+    }
+  }
+
+  function saveMembersDb() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(membersDb));
+    } catch (e) {
+      console.error(e);
+    }
+    updateMetrics();
+  }
+
+  async function syncFromCloudDb() {
+    if (!cloudDbClient) {
+      updateCloudStatus('local', 'MODE LOKAL');
+      return;
+    }
+    updateCloudStatus('syncing', 'MENYINKRONKAN...');
+    try {
+      const { data, error } = await cloudDbClient
+        .from('members')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.warn('Database fetch error:', error);
+        updateCloudStatus('local', 'MODE OFFLINE');
+        return;
+      }
+
+      if (data && data.length > 0) {
+        membersDb = data.map(m => ({
+          id: m.id,
+          name: m.name,
+          ktp: m.ktp || '',
+          phone: m.phone || '',
+          validity: m.validity || '09/26 - 09/27',
+          signatureData: m.signature_data,
+          registeredAt: m.created_at,
+          claimCount: m.claim_count != null ? m.claim_count : 0
+        }));
+        saveMembersDb();
+        renderMonitoringList(monitorSearchInput ? monitorSearchInput.value : '');
+
+        // Refresh currently active card display
+        if (currentVerifiedMember) {
+          const found = membersDb.find(m => m.id === currentVerifiedMember.id || m.ktp === currentVerifiedMember.ktp);
+          if (found) {
+            currentVerifiedMember = found;
+            showValidCardState(found);
+          }
+        } else if (verifySearchInput && verifySearchInput.value) {
+          verifyMemberCard(verifySearchInput.value);
+        }
+      } else if (membersDb.length > 0) {
+        // Seed cloud table if blank
+        for (const m of membersDb) {
+          await cloudDbClient.from('members').upsert([{
+            id: m.id,
+            name: m.name,
+            ktp: m.ktp,
+            phone: m.phone,
+            validity: m.validity,
+            signature_data: m.signatureData,
+            claim_count: m.claimCount
+          }]);
+        }
+      }
+      updateCloudStatus('connected', 'DATABASE CLOUD');
+    } catch (err) {
+      console.error('Koneksi database gagal:', err);
+      updateCloudStatus('local', 'MODE OFFLINE');
+    }
+  }
+
+  function setupCloudRealtime() {
+    if (!cloudDbClient) return;
+    try {
+      cloudDbClient
+        .channel('public:members')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, () => {
+          syncFromCloudDb();
+        })
+        .subscribe();
+    } catch (e) {
+      console.warn('Realtime subscription error:', e);
+    }
+  }
+
+  /* =========================================================
+     2. NAVIGATION TABS (VERIFY, MONITOR, REGISTER)
+     ========================================================= */
+  const navTabs = [
+    { btn: document.getElementById('tab-btn-verify'), content: document.getElementById('tab-content-verify') },
+    { btn: document.getElementById('tab-btn-monitor'), content: document.getElementById('tab-content-monitor') },
+    { btn: document.getElementById('tab-btn-register'), content: document.getElementById('tab-content-register') },
+    { btn: document.getElementById('tab-btn-terms'), content: document.getElementById('tab-content-terms') }
+  ];
+
+  navTabs.forEach(({ btn, content }) => {
+    btn.addEventListener('click', () => {
+      navTabs.forEach(t => {
+        t.btn.classList.remove('active');
+        t.content.classList.add('hidden');
+      });
+      btn.classList.add('active');
+      content.classList.remove('hidden');
+
+      if (btn.id === 'tab-btn-monitor') {
+        renderMonitoringList();
+        updateMetrics();
+      }
+    });
+  });
+
+  window.goToTermsTab = function() {
+    const btn = document.getElementById('tab-btn-terms');
+    if (btn) btn.click();
+  };
+
+  window.goToRegisterTab = function() {
+    const btn = document.getElementById('tab-btn-register');
+    if (btn) btn.click();
+  };
+
+  /* =========================================================
+     3. 3D CARD FLIP
+     ========================================================= */
+  const cardContainer = document.getElementById('card-flipper-container');
+  const cardInner = document.getElementById('card-inner');
+  const btnManualFlip = document.getElementById('btn-manual-flip');
+
+  function toggleCardFlip() {
+    cardInner.classList.toggle('card-flipped');
+  }
+  cardContainer.addEventListener('click', toggleCardFlip);
+  btnManualFlip.addEventListener('click', (e) => {
+    e.stopPropagation();
+    toggleCardFlip();
+  });
+
+  /* =========================================================
+     4. CARD AUTHENTICITY & CLAIM VERIFICATION ENGINE
+     ========================================================= */
+  const verifySearchInput = document.getElementById('verify-search-input');
+  const btnDoVerify = document.getElementById('btn-do-verify');
+
+  const authStatusBox = document.getElementById('auth-status-box');
+  const authStatusIcon = document.getElementById('auth-status-icon');
+  const authStatusTitle = document.getElementById('auth-status-title');
+  const authStatusDesc = document.getElementById('auth-status-desc');
+  const authStatusTag = document.getElementById('auth-status-tag');
+
+  const cardDisplayName = document.getElementById('card-display-name');
+  const cardDisplayId = document.getElementById('card-display-id');
+  const cardDisplayKtp = document.getElementById('card-display-ktp');
+  const cardDisplayValid = document.getElementById('card-display-valid');
+  const cardQrImage = document.getElementById('card-qr-image');
+  const cardSigImg = document.getElementById('card-signature-img');
+  const cardSigFallback = document.getElementById('card-signature-fallback');
+
+  const cardDisplayClaims = document.getElementById('card-display-claims');
+  const cardBackDisplayClaims = document.getElementById('card-back-display-claims');
+
+  function verifyMemberCard(query) {
+    const q = (query || '').trim().toLowerCase();
+    if (!q) return;
+
+    const found = membersDb.find(m =>
+      (m.ktp && m.ktp.toLowerCase() === q) ||
+      (m.id && m.id.toLowerCase() === q) ||
+      (m.name && m.name.toLowerCase().includes(q)) ||
+      (m.phone && m.phone.includes(q))
+    );
+
+    if (found) {
+      currentVerifiedMember = found;
+      showValidCardState(found);
+    } else {
+      currentVerifiedMember = null;
+      showInvalidCardState(query);
+    }
+  }
+
+  function showValidCardState(m) {
+    const count = m.claimCount != null ? m.claimCount : (m.claimHistory ? m.claimHistory.length : 0);
+
+    // 1. Status Banner: Valid & Genuine
+    authStatusBox.className = 'rounded-xl border border-emerald-300 bg-emerald-50/80 p-3.5 flex items-center justify-between shadow-sm';
+    authStatusIcon.className = 'w-9 h-9 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 shrink-0 text-lg font-bold';
+    authStatusIcon.innerText = '✓';
+    authStatusTitle.className = 'font-bold text-[13px] text-emerald-800 tracking-tight';
+    authStatusTitle.innerText = 'KARTU ASLI & TERVERIFIKASI RESMI';
+    authStatusDesc.className = 'text-[10.5px] text-emerald-700';
+    authStatusDesc.innerText = `Terdaftar resmi a.n ${m.name} · No. Identitas: ${m.ktp || '-'} · Sudah ${count}x Klaim`;
+    authStatusTag.className = 'px-2 py-1 rounded bg-emerald-200 border border-emerald-400 text-emerald-900 text-[10px] font-bold font-mono';
+    authStatusTag.innerText = `VALID (${count}x KLAIM)`;
+
+    // 2. Card Info Update
+    cardDisplayName.innerText = m.name.toUpperCase();
+    cardDisplayId.innerText = m.id;
+    if (cardDisplayKtp) cardDisplayKtp.innerText = m.ktp || '-';
+    cardDisplayValid.innerText = m.validity;
+    if (cardDisplayClaims) cardDisplayClaims.innerText = `${count}x Klaim`;
+    if (cardBackDisplayClaims) cardBackDisplayClaims.innerText = `${count} Kali`;
+    cardQrImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(m.id)}`;
+
+    if (m.signatureData) {
+      cardSigImg.src = m.signatureData;
+      cardSigImg.classList.remove('hidden');
+      cardSigFallback.classList.add('hidden');
+    } else {
+      cardSigImg.classList.add('hidden');
+      cardSigFallback.classList.remove('hidden');
+      cardSigFallback.innerText = m.name;
+    }
+  }
+
+  function showInvalidCardState(query) {
+    authStatusBox.className = 'rounded-xl border border-rose-300 bg-rose-50/90 p-3.5 flex items-center justify-between shadow-sm';
+    authStatusIcon.className = 'w-9 h-9 rounded-full bg-rose-100 border border-rose-300 flex items-center justify-center text-rose-700 shrink-0 text-lg font-bold';
+    authStatusIcon.innerText = '✕';
+    authStatusTitle.className = 'font-bold text-[13px] text-rose-800 tracking-tight';
+    authStatusTitle.innerText = 'KARTU TIDAK VALID / TIDAK TERDAFTAR';
+    authStatusDesc.className = 'text-[10.5px] text-rose-700';
+    authStatusDesc.innerText = `ID atau data "${query}" tidak ditemukan di sistem. Waspada kartu palsu!`;
+    authStatusTag.className = 'px-2 py-1 rounded bg-rose-200 border border-rose-400 text-rose-900 text-[10px] font-bold font-mono';
+    authStatusTag.innerText = 'TIDAK VALID';
+
+    cardDisplayName.innerText = 'TIDAK TERDAFTAR';
+    cardDisplayId.innerText = query.toUpperCase();
+    if (cardDisplayKtp) cardDisplayKtp.innerText = 'TIDAK VALID';
+    cardDisplayValid.innerText = 'TIDAK BERLAKU';
+    if (cardDisplayClaims) cardDisplayClaims.innerText = '0x Klaim';
+    if (cardBackDisplayClaims) cardBackDisplayClaims.innerText = '0 Kali';
+  }
+
+  btnDoVerify.addEventListener('click', () => {
+    verifyMemberCard(verifySearchInput.value);
+  });
+  verifySearchInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      verifyMemberCard(verifySearchInput.value);
+    }
+  });
+
+  /* =========================================================
+     6. MONITORING TAB (DASHBOARD & DATA MEMBER)
+     ========================================================= */
+  const monitorMemberList = document.getElementById('monitor-member-list');
+  const monitorSearchInput = document.getElementById('monitor-search-input');
+  const metricTotalMembers = document.getElementById('metric-total-members');
+  const metricTotalClaims = document.getElementById('metric-total-claims');
+  const btnExportCsv = document.getElementById('btn-export-csv');
+
+  function updateMetrics() {
+    metricTotalMembers.innerText = membersDb.length;
+    const totalClaims = membersDb.reduce((acc, m) => acc + (m.claimCount || (m.claimHistory ? m.claimHistory.length : 0)), 0);
+    metricTotalClaims.innerText = totalClaims;
+  }
+
+  function renderMonitoringList(query = '') {
+    monitorMemberList.innerHTML = '';
+    const q = query.toLowerCase().trim();
+
+    const filtered = membersDb.filter(m =>
+      (m.ktp && m.ktp.toLowerCase().includes(q)) ||
+      m.name.toLowerCase().includes(q) ||
+      m.id.toLowerCase().includes(q) ||
+      m.phone.includes(q)
+    );
+
+    if (filtered.length === 0) {
+      monitorMemberList.innerHTML = `
+        <div class="text-center py-6 text-[11.5px] text-ink-400">
+          Tidak ada data member yang cocok dengan pencarian.
+        </div>
+      `;
+      return;
+    }
+
+    filtered.forEach(m => {
+      const claims = m.claimCount || (m.claimHistory ? m.claimHistory.length : 0);
+      let claimBadgeClass = 'bg-slate-100 text-ink-600 border-slate-200';
+      if (claims === 1) claimBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200 font-bold';
+      else if (claims >= 2) claimBadgeClass = 'bg-rose-50 text-rose-800 border-rose-200 font-bold';
+
+      const card = document.createElement('div');
+      card.className = 'p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 hover:border-brand-400 transition';
+      card.innerHTML = `
+        <div class="flex items-start justify-between">
+          <div>
+            <div class="flex items-center gap-1.5">
+              <strong class="text-[13px] text-ink-900">${m.name}</strong>
+              <span class="px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 font-mono text-[9px] border border-brand-200">${m.id}</span>
+            </div>
+            <p class="text-[10.5px] text-ink-500 mt-0.5">ID Identitas (KTP): <strong class="text-ink-800 font-mono">${m.ktp || '-'}</strong></p>
+          </div>
+          <span class="px-2 py-1 rounded-md text-[10px] border ${claimBadgeClass}">
+            ${claims}x Klaim
+          </span>
+        </div>
+
+        <div class="flex items-center justify-between pt-1.5 border-t border-slate-200/80 text-[10.5px]">
+          <span class="text-ink-400">WA: <strong class="text-ink-700 font-mono">+62${m.phone}</strong></span>
+          <div class="flex items-center gap-1.5">
+            <button class="px-2 py-1 bg-white hover:bg-brand-50 text-brand-700 border border-slate-200 rounded-lg text-[10px] font-bold shadow-xs transition flex items-center gap-1" onclick="openEditMemberModal('${m.id}')" title="Edit Member">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+              <span>Edit</span>
+            </button>
+            <button class="px-2 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 rounded-lg text-[10px] font-bold shadow-xs transition flex items-center gap-1" onclick="deleteMember('${m.id}')" title="Hapus Member">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+              <span>Hapus</span>
+            </button>
+            <button class="px-2.5 py-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[10px] font-bold shadow-xs transition flex items-center gap-1" onclick="selectMemberToVerify('${m.id}')" title="Cek Keaslian">
+              <span>Cek</span>
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </button>
+          </div>
+        </div>
+      `;
+      monitorMemberList.appendChild(card);
+    });
+  }
+
+  monitorSearchInput.addEventListener('input', (e) => {
+    renderMonitoringList(e.target.value);
+  });
+
+  window.selectMemberToVerify = function(memberId) {
+    const member = membersDb.find(m => m.id === memberId || m.ktp === memberId);
+    const query = member ? (member.ktp || member.id) : memberId;
+    verifySearchInput.value = query;
+    verifyMemberCard(query);
+    document.getElementById('tab-btn-verify').click();
+  };
+
+  btnExportCsv.addEventListener('click', () => {
+    if (membersDb.length === 0) {
+      alert('Belum ada data member untuk diekspor.');
+      return;
+    }
+
+    let csv = 'ID_Member,Nama_Lengkap,ID_Kartu_Identitas_KTP,WhatsApp,Masa_Berlaku,Total_Klaim\n';
+    membersDb.forEach(m => {
+      const claimsTotal = m.claimCount != null ? m.claimCount : (m.claimHistory ? m.claimHistory.length : 0);
+      csv += `"${m.id}","${m.name}","${m.ktp || ''}","+62${m.phone}","${m.validity}","${claimsTotal}"\n`;
+    });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `iGood-Kebumen-Monitoring-Klaim-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(a);
+  });
+
+  /* =========================================================
+     6B. MEMBER EDIT & DELETE MANAGEMENT
+     ========================================================= */
+  const editMemberModal = document.getElementById('edit-member-modal');
+  const editOriginalId = document.getElementById('edit-original-id');
+  const editModalSubtitle = document.getElementById('edit-modal-subtitle');
+  const editInputName = document.getElementById('edit-input-name');
+  const editInputKtp = document.getElementById('edit-input-ktp');
+  const editInputPhone = document.getElementById('edit-input-phone');
+  const editInputValidity = document.getElementById('edit-input-validity');
+  const editInputClaims = document.getElementById('edit-input-claims');
+  const formEditMember = document.getElementById('form-edit-member');
+
+  window.openEditMemberModal = function(memberId) {
+    const member = membersDb.find(m => m.id === memberId);
+    if (!member) {
+      alert('Data member tidak ditemukan.');
+      return;
+    }
+    editOriginalId.value = member.id;
+    editModalSubtitle.innerText = `ID: ${member.id}`;
+    editInputName.value = member.name || '';
+    editInputKtp.value = member.ktp || '';
+    editInputPhone.value = member.phone || '';
+    editInputValidity.value = member.validity || '09/26 - 09/27';
+    if (editInputClaims) {
+      editInputClaims.value = member.claimCount != null ? member.claimCount : (member.claimHistory ? member.claimHistory.length : 0);
+    }
+
+    editMemberModal.classList.remove('hidden');
+    editMemberModal.classList.add('flex');
+  };
+
+  window.closeEditMemberModal = function() {
+    editMemberModal.classList.add('hidden');
+    editMemberModal.classList.remove('flex');
+  };
+
+  formEditMember.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const origId = editOriginalId.value;
+    const member = membersDb.find(m => m.id === origId);
+    if (!member) return;
+
+    member.name = editInputName.value.trim();
+    member.ktp = editInputKtp.value.trim();
+    member.phone = editInputPhone.value.trim();
+    member.validity = editInputValidity.value.trim() || '09/26 - 09/27';
+    if (editInputClaims) {
+      member.claimCount = parseInt(editInputClaims.value, 10) || 0;
+    }
+
+    saveMembersDb();
+    renderMonitoringList(monitorSearchInput.value);
+
+    // If active verified member was updated, refresh display immediately
+    if (currentVerifiedMember && currentVerifiedMember.id === origId) {
+      currentVerifiedMember = member;
+      showValidCardState(member);
+    }
+
+    closeEditMemberModal();
+
+    // Sync to Cloud Database
+    if (cloudDbClient) {
+      updateCloudStatus('syncing', 'MENYIMPAN...');
+      try {
+        const { error } = await cloudDbClient
+          .from('members')
+          .update({
+            name: member.name,
+            ktp: member.ktp,
+            phone: member.phone,
+            validity: member.validity,
+            claim_count: member.claimCount
+          })
+          .eq('id', origId);
+
+        if (error) {
+          console.error('Database update error:', error);
+          updateCloudStatus('local', 'SYNC ERROR');
+        } else {
+          updateCloudStatus('connected', 'DATABASE CLOUD');
+        }
+      } catch (err) {
+        console.error('Database update failed:', err);
+        updateCloudStatus('local', 'OFFLINE');
+      }
+    }
+
+    alert(`Data member ${member.name} (${member.id}) berhasil diperbarui!`);
+  });
+
+  window.deleteMember = async function(memberId) {
+    const member = membersDb.find(m => m.id === memberId);
+    if (!member) return;
+
+    const claims = member.claimCount || (member.claimHistory ? member.claimHistory.length : 0);
+    const confirmDelete = confirm(`Hapus member ${member.name} (${member.id})?\n\nPERINGATAN: Seluruh data dan ${claims}x riwayat klaim member ini akan dihapus permanen.`);
+    if (!confirmDelete) return;
+
+    membersDb = membersDb.filter(m => m.id !== memberId);
+    saveMembersDb();
+    renderMonitoringList(monitorSearchInput.value);
+
+    // If current verified member was deleted, fallback to remaining or reset
+    if (currentVerifiedMember && currentVerifiedMember.id === memberId) {
+      if (membersDb.length > 0) {
+        currentVerifiedMember = membersDb[0];
+        showValidCardState(membersDb[0]);
+        verifySearchInput.value = membersDb[0].ktp || membersDb[0].id;
+      } else {
+        currentVerifiedMember = null;
+        showInvalidCardState('Tidak Ada Member');
+        verifySearchInput.value = '';
+      }
+    }
+
+    // Delete from Cloud Database
+    if (cloudDbClient) {
+      updateCloudStatus('syncing', 'MENGHAPUS...');
+      try {
+        const { error } = await cloudDbClient
+          .from('members')
+          .delete()
+          .eq('id', memberId);
+
+        if (error) {
+          console.error('Database delete error:', error);
+          updateCloudStatus('local', 'SYNC ERROR');
+        } else {
+          updateCloudStatus('connected', 'DATABASE CLOUD');
+        }
+      } catch (err) {
+        console.error('Database delete failed:', err);
+        updateCloudStatus('local', 'OFFLINE');
+      }
+    }
+
+    alert(`Member ${member.name} berhasil dihapus dari database.`);
+  };
+
+  /* =========================================================
+     7. MEMBER REGISTRATION CANVAS & FORM
+     ========================================================= */
+  const memberForm = document.getElementById('membership-form');
+  const inputName = document.getElementById('reg-name');
+  const inputKtp = document.getElementById('reg-ktp');
+  const inputPhone = document.getElementById('reg-phone');
+  const sigCanvas = document.getElementById('signature-canvas');
+  const sigCtx = sigCanvas.getContext('2d');
+  const clearBtn = document.getElementById('btn-clear-canvas');
+  const signPlaceholder = document.getElementById('sign-placeholder');
+
+  let isDrawing = false;
+  let hasSigned = false;
+  sigCtx.lineWidth = 3;
+  sigCtx.lineCap = 'round';
+  sigCtx.lineJoin = 'round';
+  sigCtx.strokeStyle = '#14487f';
+
+  function getPos(e) {
+    const rect = sigCanvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+      x: (cx - rect.left) * (sigCanvas.width / rect.width),
+      y: (cy - rect.top) * (sigCanvas.height / rect.height)
+    };
+  }
+
+  function startDraw(e) {
+    isDrawing = true;
+    hasSigned = true;
+    if (signPlaceholder) signPlaceholder.classList.add('hidden');
+    const p = getPos(e);
+    sigCtx.beginPath();
+    sigCtx.moveTo(p.x, p.y);
+    if (e.cancelable && e.type.startsWith('touch')) e.preventDefault();
+  }
+
+  function draw(e) {
+    if (!isDrawing) return;
+    const p = getPos(e);
+    sigCtx.lineTo(p.x, p.y);
+    sigCtx.stroke();
+    if (e.cancelable && e.type.startsWith('touch')) e.preventDefault();
+  }
+
+  function stopDraw() {
+    if (!isDrawing) return;
+    isDrawing = false;
+    sigCtx.closePath();
+  }
+
+  sigCanvas.addEventListener('touchstart', startDraw, { passive: false });
+  sigCanvas.addEventListener('touchmove', draw, { passive: false });
+  sigCanvas.addEventListener('touchend', stopDraw);
+  sigCanvas.addEventListener('mousedown', startDraw);
+  sigCanvas.addEventListener('mousemove', draw);
+  sigCanvas.addEventListener('mouseup', stopDraw);
+  sigCanvas.addEventListener('mouseleave', stopDraw);
+
+  clearBtn.addEventListener('click', () => {
+    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    hasSigned = false;
+    if (signPlaceholder) signPlaceholder.classList.remove('hidden');
+  });
+
+  memberForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const agreeTerms = document.getElementById('reg-agree-terms');
+    if (agreeTerms && !agreeTerms.checked) {
+      alert('Harap setujui rincian Keuntungan serta Syarat & Ketentuan (S&K) terlebih dahulu sebelum melanjutkan.');
+      agreeTerms.focus();
+      return;
+    }
+
+    if (!hasSigned) {
+      alert('Harap bubuhkan tanda tangan digital pelanggan di layar sebelum menerbitkan kartu member.');
+      sigCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      return;
+    }
+
+    const name = inputName.value.trim();
+    const ktp = inputKtp.value.trim();
+    const phone = inputPhone.value.trim();
+    const last4 = ktp.replace(/\D/g, '').slice(-4) || String(Math.floor(1000 + Math.random() * 9000));
+    const newId = `IG-KBM-2026-${last4}`;
+    const sigData = hasSigned ? sigCanvas.toDataURL('image/png') : null;
+
+    const newMember = {
+      id: newId,
+      name,
+      ktp,
+      phone,
+      validity: '09/26 - 09/27',
+      signatureData: sigData,
+      registeredAt: new Date().toISOString(),
+      claimCount: 0
+    };
+
+    // Check duplicate ID / KTP
+    const existingIdx = membersDb.findIndex(m => m.id === newId || (m.ktp && m.ktp === ktp));
+    if (existingIdx >= 0) {
+      membersDb[existingIdx] = newMember;
+    } else {
+      membersDb.unshift(newMember);
+    }
+    saveMembersDb();
+
+    // Upsert into Cloud Database
+    if (cloudDbClient) {
+      updateCloudStatus('syncing', 'MENDAFTARKAN...');
+      try {
+        const { error } = await cloudDbClient
+          .from('members')
+          .upsert([{
+            id: newId,
+            name: name,
+            ktp: ktp,
+            phone: phone,
+            validity: '09/26 - 09/27',
+            signature_data: sigData,
+            claim_count: 0
+          }]);
+
+        if (error) {
+          console.error('Database insert error:', error);
+          updateCloudStatus('local', 'SYNC ERROR');
+        } else {
+          updateCloudStatus('connected', 'DATABASE CLOUD');
+        }
+      } catch (err) {
+        console.error('Database insert failed:', err);
+        updateCloudStatus('local', 'OFFLINE');
+      }
+    }
+
+    alert(`Pendaftaran Berhasil!\nMember ${name} (ID: ${newId} · No. Identitas: ${ktp}) telah terdaftar dengan status 0x Klaim.`);
+
+    // Reset Form
+    memberForm.reset();
+    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    hasSigned = false;
+    if (signPlaceholder) signPlaceholder.classList.remove('hidden');
+
+    // Switch to Verification View for this new member
+    selectMemberToVerify(ktp);
+  });
+
+  /* =========================================================
+     8. INITIALIZATION
+     ========================================================= */
+  loadMembersDb();
+  updateMetrics();
+  // Verify default member on load
+  verifyMemberCard('3305012309990001');
+
+  // Cloud Database Async Sync & Realtime Listener
+  syncFromCloudDb();
+  setupCloudRealtime();
+</script>
+</body>
+</html>
