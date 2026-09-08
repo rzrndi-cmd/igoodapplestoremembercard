@@ -68,51 +68,86 @@
   </script>
 
   <style>
-    /* 3D Card Engine */
+    /* Safe Area Insets for Mobile Viewports */
+    :root {
+      --sat: env(safe-area-inset-top, 0px);
+      --sab: env(safe-area-inset-bottom, 0px);
+    }
+
+    /* 3D Card Engine with Dual-Plane Isolation */
     .perspective-1200 { perspective: 1200px; }
     .transform-style-preserve-3d {
       transform-style: preserve-3d;
-      transition: transform 0.7s cubic-bezier(0.2, 0.85, 0.25, 1);
-    }
-    .backface-hidden {
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
-    }
-    .rotate-y-180 {
-      transform: rotateY(180deg);
+      -webkit-transform-style: preserve-3d;
+      transition: transform 0.65s cubic-bezier(0.2, 0.85, 0.25, 1);
     }
     .card-flipped {
       transform: rotateY(180deg);
     }
 
-    /* Royal Blue & Ocean Metallic Textures matching #1a5b9f */
+    .card-face-front,
+    .card-face-back {
+      position: absolute;
+      inset: 0;
+      border-radius: 1rem;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transition: opacity 0.22s ease, visibility 0.22s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+
     .card-face-front {
+      transform: rotateY(0deg);
+      opacity: 1;
+      visibility: visible;
+      z-index: 2;
+      pointer-events: auto;
       background:
         radial-gradient(circle at 75% 25%, rgba(75, 142, 211, 0.42) 0%, transparent 50%),
         radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 42%),
         repeating-radial-gradient(circle at 60% 45%, rgba(255,255,255,0.02) 0 1px, transparent 1px 3px),
         linear-gradient(135deg, #1a5b9f 0%, #0f3a67 52%, #0a2747 100%);
       box-shadow:
-        0 22px 45px -12px rgba(10, 39, 71, 0.55),
+        0 20px 40px -12px rgba(10, 39, 71, 0.5),
         0 0 0 1px rgba(130, 179, 229, 0.4),
         inset 0 1px 1px rgba(255, 255, 255, 0.35);
     }
 
     .card-face-back {
+      transform: rotateY(180deg);
+      opacity: 0;
+      visibility: hidden;
+      z-index: 1;
+      pointer-events: none;
       background:
         radial-gradient(circle at 50% 10%, rgba(75, 142, 211, 0.22) 0%, transparent 45%),
         linear-gradient(145deg, #14487f 0%, #08203c 60%, #0d2d52 100%);
       box-shadow:
-        0 22px 45px -12px rgba(10, 39, 71, 0.55),
+        0 20px 40px -12px rgba(10, 39, 71, 0.5),
         0 0 0 1px rgba(130, 179, 229, 0.25),
         inset 0 1px 1px rgba(255, 255, 255, 0.2);
+    }
+
+    /* Dual-plane toggle states */
+    #card-inner.card-flipped .card-face-front {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    #card-inner.card-flipped .card-face-back {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      z-index: 3;
     }
 
     /* Chrome & Platinum Smart Chip */
     .emv-chip-real {
       position: relative;
       background: linear-gradient(135deg, #e2e8f0 0%, #ffffff 45%, #94a3b8 100%);
-      border-radius: 6px;
+      border-radius: 5px;
       box-shadow: inset 0 0 3px rgba(0, 0, 0, 0.35), 0 2px 4px rgba(0,0,0,0.25);
       overflow: hidden;
     }
@@ -141,18 +176,60 @@
       box-shadow: inset 0 2px 4px rgba(0,0,0,0.9);
     }
 
+    /* Container Queries for Adaptive 3D Card Scaling */
+    #verified-card-section {
+      container-type: inline-size;
+      container-name: cardbox;
+    }
+
+    @container cardbox (max-width: 360px) {
+      .card-responsive-padding { padding: 0.75rem !important; }
+      .card-responsive-logo { width: 1.875rem !important; height: 1.875rem !important; }
+      .card-responsive-title { font-size: 11px !important; }
+      .card-responsive-badge { font-size: 6.5px !important; padding: 0.1rem 0.35rem !important; }
+      .card-contactless-icon { display: none !important; }
+      .card-responsive-chip { width: 2rem !important; height: 1.35rem !important; margin: 0.15rem 0 !important; }
+      .card-responsive-name { font-size: 11px !important; }
+      .card-responsive-meta { font-size: 7.5px !important; line-height: 1.2 !important; }
+      .card-responsive-qr { width: 2.35rem !important; height: 2.35rem !important; padding: 0.2rem !important; }
+      .card-responsive-mag { height: 1.4rem !important; margin-top: 0.35rem !important; }
+      .card-responsive-sig { height: 1.65rem !important; padding: 0 0.5rem !important; }
+      .card-responsive-perks { padding: 0.35rem 0.5rem !important; font-size: 7.5px !important; }
+      .card-responsive-footer { font-size: 7px !important; padding-bottom: 0.35rem !important; }
+    }
+
+    /* Prevent iOS Safari form input auto-zoom on mobile */
+    @media screen and (max-width: 768px) {
+      input[type="text"],
+      input[type="tel"],
+      input[type="number"],
+      input[type="search"],
+      select,
+      textarea {
+        font-size: 16px !important;
+      }
+    }
+
     /* Hide scrollbars */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
-    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
 
-    /* Active Tab Style */
+    /* Bottom Nav Item Styles */
+    .nav-tab-btn {
+      color: #64748b;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
     .nav-tab-btn.active {
       color: #1a5b9f;
-      background-color: #ffffff;
-      box-shadow: 0 2px 6px rgba(26, 91, 159, 0.16);
+      background-color: #f0f6fc;
     }
     .nav-tab-btn.active svg {
       stroke: #1a5b9f;
+      transform: scale(1.08);
     }
 
     /* Formal Legal Document Print Styles */
@@ -162,7 +239,7 @@
         color: #000000 !important;
         padding: 0 !important;
       }
-      header, nav, #app-bottom-nav, .no-print, #tab-content-verify, #tab-content-monitor, #tab-content-register, #edit-member-modal {
+      header, nav, #app-bottom-nav, .no-print, #tab-content-verify, #tab-content-monitor, #tab-content-register, #edit-member-modal, #confirm-delete-modal, #signature-modal {
         display: none !important;
       }
       #tab-content-terms {
@@ -180,132 +257,92 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 text-ink-900 font-display antialiased min-h-screen flex justify-center pb-20 select-none">
+<body class="bg-slate-100 text-ink-900 font-display antialiased min-h-[100dvh] flex justify-center select-none">
 
 <!-- Mobile Frame Container (White & Blue Theme) -->
-<div class="w-full max-w-[460px] bg-slate-50 relative min-h-screen flex flex-col border-x border-slate-200/80 shadow-2xl">
+<div class="w-full sm:max-w-[480px] bg-slate-50 relative min-h-[100dvh] flex flex-col sm:border-x sm:border-slate-200/80 sm:shadow-2xl overflow-hidden">
 
   <!-- TOP APP BAR -->
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 pt-3.5 pb-3">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center gap-2.5">
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-3.5 sm:px-4 pt-[max(0.75rem,env(safe-area-inset-top))] pb-2.5">
+    <div class="flex items-center justify-between gap-2">
+      <div class="flex items-center gap-2 min-w-0 flex-1">
         <!-- Official iGood Logo -->
-        <img src="IGOOD LOGO.png" alt="iGood Apple Store Kebumen" class="w-9 h-9 rounded-full object-cover shadow-sm ring-1 ring-slate-200 shrink-0 bg-white" />
-        <div>
-          <h1 class="text-[15px] font-bold tracking-tight text-ink-900 flex items-center gap-1.5">
+        <img src="IGOOD LOGO.png" alt="iGood Apple Store Kebumen" class="w-8 h-8 sm:w-9 sm:h-9 rounded-full object-cover shadow-2xs ring-1 ring-slate-200 shrink-0 bg-white" />
+        <div class="min-w-0 flex-1">
+          <h1 class="text-sm sm:text-[15px] font-bold tracking-tight text-ink-900 leading-tight truncate">
             iGood <span class="text-brand-700">Kebumen</span>
           </h1>
-          <p class="text-[11px] text-ink-500 leading-none mt-0.5">Monitoring Member &amp; Verifikasi Keaslian</p>
+          <p class="text-[10px] sm:text-[10.5px] text-ink-500 leading-none truncate mt-0.5">Priority Care Member</p>
         </div>
       </div>
-      <div class="flex items-center gap-1.5">
-        <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700" id="cloud-status-badge">
-          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" id="cloud-status-dot"></span>
-          <span id="cloud-status-text">DATABASE CLOUD</span>
+      <div class="shrink-0 flex items-center pl-1">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-emerald-50/90 border border-emerald-200/80 text-[9px] sm:text-[9.5px] font-bold text-emerald-700 shadow-2xs whitespace-nowrap" id="cloud-status-badge">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" id="cloud-status-dot"></span>
+          <span id="cloud-status-text" class="tracking-wide uppercase">ONLINE</span>
         </span>
       </div>
     </div>
   </header>
 
-  <!-- MAIN NAVIGATION TABS (4 PILLARS) -->
-  <div class="px-3 pt-3">
-    <nav class="grid grid-cols-4 gap-1 p-1 bg-slate-200/70 rounded-xl border border-slate-200 text-[10.5px] font-semibold text-ink-500">
-      <button class="nav-tab-btn active py-2 px-0.5 rounded-lg transition-all flex flex-col items-center justify-center gap-1 text-center" id="tab-btn-verify">
-        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <span class="truncate leading-none">Keaslian</span>
-      </button>
-      <button class="nav-tab-btn py-2 px-0.5 rounded-lg transition-all flex flex-col items-center justify-center gap-1 text-center" id="tab-btn-monitor">
-        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        <span class="truncate leading-none">Monitoring</span>
-      </button>
-      <button class="nav-tab-btn py-2 px-0.5 rounded-lg transition-all flex flex-col items-center justify-center gap-1 text-center" id="tab-btn-register">
-        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-        <span class="truncate leading-none">Daftar</span>
-      </button>
-      <button class="nav-tab-btn py-2 px-0.5 rounded-lg transition-all flex flex-col items-center justify-center gap-1 text-center" id="tab-btn-terms">
-        <svg class="w-4 h-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        <span class="truncate leading-none">S&amp;K</span>
-      </button>
-    </nav>
-  </div>
-
-  <!-- MAIN VIEWPORT -->
-  <main class="flex-1 px-4 pt-3 pb-6 space-y-4">
+  <!-- MAIN VIEWPORT (Scrollable) -->
+  <main class="flex-1 px-3 sm:px-4 pt-3 pb-6 space-y-3.5 overflow-y-auto hide-scrollbar">
 
     <!-- ========================================================
          TAB 1: PENGECEKAN KEASLIAN MEMBER CARD & RIWAYAT KLAIM
          ======================================================== -->
-    <section class="space-y-3.5" id="tab-content-verify">
+    <section class="space-y-3" id="tab-content-verify">
 
-      <!-- Fast Verification Search Box -->
-      <div class="bg-white rounded-xl border border-slate-200 p-3 shadow-sm space-y-2">
-        <label class="block text-[11px] font-bold text-ink-700 uppercase tracking-wider">
-          🔍 Validasi Keaslian Berdasarkan ID Kartu Identitas:
-        </label>
-        <div class="flex gap-2">
-          <div class="relative flex-1">
-            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-2 text-[12.5px] text-ink-900 font-mono focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600" id="verify-search-input" placeholder="Masukkan ID Kartu Identitas (No. KTP / ID Member)" type="text" value="3305012309990001"/>
-            <svg class="absolute left-2.5 top-2.5 text-ink-400" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          </div>
-          <button class="px-3.5 py-2 bg-brand-600 hover:bg-brand-700 text-white font-bold text-[12px] rounded-lg shadow-sm transition" id="btn-do-verify" type="button">
+      <!-- Minimalist Search Bar & Verification Status -->
+      <div class="space-y-1.5">
+        <div class="relative flex items-center">
+          <svg class="absolute left-3 text-ink-400 pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input class="w-full bg-white border border-slate-200/90 rounded-xl pl-9 pr-20 py-2.5 text-xs sm:text-[13px] text-ink-900 font-mono placeholder:text-ink-400 placeholder:font-sans focus:outline-none focus:border-brand-600 focus:ring-2 focus:ring-brand-100 shadow-2xs transition" id="verify-search-input" placeholder="No. KTP atau ID Member..." type="text"/>
+          <button class="absolute right-1.5 px-3.5 py-1.5 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-semibold text-xs rounded-lg shadow-2xs transition" id="btn-do-verify" type="button">
             Cek
           </button>
         </div>
-      </div>
 
-      <!-- Authenticity Verification Status Banner -->
-      <div class="rounded-xl border p-3.5 flex items-center justify-between shadow-sm transition-all" id="auth-status-box">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-600 shrink-0 text-lg" id="auth-status-icon">
-            ✓
+        <!-- Minimalist Status Strip (No Heavy Stacking Borders) -->
+        <div class="flex items-center justify-between px-2 py-1 rounded-lg bg-slate-50/80 border border-slate-200/60 text-[10.5px] sm:text-[11px] transition-all" id="auth-status-box">
+          <div class="flex items-center gap-1.5 min-w-0">
+            <span class="text-xs shrink-0" id="auth-status-icon">🔍</span>
+            <span class="font-medium truncate text-ink-600" id="auth-status-title">Status: Siap verifikasi kartu member</span>
           </div>
-          <div>
-            <div class="flex items-center gap-2">
-              <h3 class="font-bold text-[13px] text-emerald-700 tracking-tight" id="auth-status-title">
-                KARTU ASLI &amp; TERVERIFIKASI RESMI
-              </h3>
-            </div>
-            <p class="text-[10.5px] text-ink-500" id="auth-status-desc">
-              Terdaftar resmi di database iGood Apple Store Kebumen
-            </p>
-          </div>
+          <span class="text-[9px] sm:text-[9.5px] font-mono font-bold text-slate-500 uppercase tracking-wider shrink-0 px-1.5 py-0.5 rounded bg-slate-200/70" id="auth-status-tag">STANDBY</span>
         </div>
-        <span class="px-2 py-1 rounded bg-emerald-100 border border-emerald-300 text-emerald-800 text-[10px] font-bold font-mono" id="auth-status-tag">
-          VALID
-        </span>
       </div>
 
       <!-- 3D Card Scene (Proof of Genuine Card) -->
       <div class="space-y-1.5" id="verified-card-section">
         <div class="flex items-center justify-between px-1">
-          <span class="text-[11px] font-bold text-ink-600 uppercase tracking-wide">Fisik Digital Terdaftar</span>
-          <button id="btn-manual-flip" class="text-[10.5px] font-semibold text-brand-700 hover:text-brand-800 flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-brand-200 shadow-xs">
+          <span class="text-[10.5px] sm:text-[11px] font-bold text-ink-600 uppercase tracking-wide">Fisik Digital Terdaftar</span>
+          <button id="btn-manual-flip" class="text-[10px] sm:text-[10.5px] font-semibold text-brand-700 hover:text-brand-800 active:scale-95 flex items-center gap-1 px-2.5 py-1 rounded-md bg-white border border-brand-200 shadow-xs transition">
             <span>Balik Kartu</span>
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M4 4v6h6M20 20v-6h-6"/><path d="M20 8a8 8 0 0 0-14.6-4M4 16a8 8 0 0 0 14.6 4"/></svg>
           </button>
         </div>
 
         <div class="perspective-1200 w-full cursor-pointer" id="card-flipper-container" title="Ketuk untuk membalik kartu">
-          <div class="transform-style-preserve-3d relative w-full aspect-[1.586/1] rounded-2xl" id="card-inner">
+          <div class="transform-style-preserve-3d relative w-full aspect-[1.586/1] min-h-[185px] sm:min-h-[220px] rounded-2xl" id="card-inner">
 
             <!-- FRONT SIDE -->
-            <div class="backface-hidden absolute inset-0 rounded-2xl card-face-front p-4 sm:p-5 flex flex-col justify-between overflow-hidden text-white">
+            <div class="card-face-front card-responsive-padding p-3.5 sm:p-5 flex flex-col justify-between overflow-hidden text-white">
               <div class="flex items-start justify-between relative z-10">
-                <div class="flex items-center gap-2.5">
-                  <div class="w-10 h-10 rounded-full bg-white p-0.5 shrink-0 shadow-md ring-1 ring-white/30">
+                <div class="flex items-center gap-2 sm:gap-2.5">
+                  <div class="card-responsive-logo w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-white p-0.5 shrink-0 shadow-md ring-1 ring-white/30">
                     <img src="IGOOD LOGO.png" alt="iGood Apple Store Logo" class="w-full h-full rounded-full object-cover"/>
                   </div>
                   <div>
-                    <h3 class="font-bold text-[14px] leading-tight tracking-tight bg-gradient-to-r from-white via-blue-100 to-blue-200 bg-clip-text text-transparent">
+                    <h3 class="card-responsive-title font-bold text-[11.5px] sm:text-[14px] leading-tight tracking-tight bg-gradient-to-r from-white via-blue-100 to-blue-200 bg-clip-text text-transparent">
                       iGood Apple Store Kebumen
                     </h3>
-                    <div class="inline-flex items-center mt-0.5 px-2 py-0.5 rounded-full bg-white text-brand-800 font-bold text-[8px] tracking-wider shadow-sm">
+                    <div class="card-responsive-badge inline-flex items-center mt-0.5 px-1.5 sm:px-2 py-0.5 rounded-full bg-white text-brand-800 font-bold text-[7px] sm:text-[8px] tracking-wider shadow-sm">
                       PRIORITY CARE MEMBER
                     </div>
                   </div>
                 </div>
-                <div class="text-white/60 pt-0.5">
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="card-contactless-icon text-white/60 pt-0.5">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="sm:w-[18px] sm:h-[18px]">
                     <path d="M8.5 16.5a5 5 0 0 1 0-9"/>
                     <path d="M12 19a8.5 8.5 0 0 0 0-14"/>
                     <path d="M15.5 21.5a12 12 0 0 0 0-19"/>
@@ -314,79 +351,79 @@
               </div>
 
               <!-- Platinum EMV Chip -->
-              <div class="relative z-10 my-0.5">
-                <div class="w-10 h-7 emv-chip-real"></div>
+              <div class="relative z-10 my-0 sm:my-0.5">
+                <div class="card-responsive-chip w-8 h-5.5 sm:w-10 sm:h-7 emv-chip-real"></div>
               </div>
 
-              <div class="flex items-end justify-between relative z-10 pt-1">
-                <div class="space-y-0.5">
+              <div class="flex items-end justify-between relative z-10 pt-0.5 sm:pt-1">
+                <div class="space-y-0.5 flex-1 min-w-0 pr-2">
                   <div>
-                    <span class="text-[8.5px] uppercase tracking-wider text-brand-200 block font-medium">Name:</span>
-                    <p class="font-bold text-[13px] tracking-wide text-white uppercase truncate max-w-[210px]" id="card-display-name">
-                      AHMAD FAUZI
+                    <span class="text-[7.5px] sm:text-[8.5px] uppercase tracking-wider text-brand-200 block font-medium leading-none">Name:</span>
+                    <p class="card-responsive-name font-bold text-[11px] sm:text-[13px] tracking-wide text-white uppercase truncate max-w-[160px] sm:max-w-[210px] leading-tight mt-0.5" id="card-display-name">
+                      PRIORITY MEMBER
                     </p>
                   </div>
-                  <div class="text-[9.5px] space-y-0.5 font-mono">
-                    <p class="text-brand-300 font-semibold tracking-wide">
-                      Membership ID: <span id="card-display-id">IG-KBM-2026-0889</span>
+                  <div class="card-responsive-meta text-[8px] sm:text-[9.5px] space-y-0.5 font-mono leading-tight">
+                    <p class="text-brand-300 font-semibold tracking-wide truncate">
+                      ID: <span id="card-display-id">IG-KBM-XXXX-XXXX</span>
                     </p>
-                    <p class="text-brand-200 font-normal">
-                      No. Identitas: <span class="text-white font-medium" id="card-display-ktp">3305012309990001</span>
+                    <p class="text-brand-200 font-normal truncate">
+                      KTP: <span class="text-white font-medium" id="card-display-ktp">----------------</span>
                     </p>
-                    <p class="text-brand-200 font-normal">
-                      Validity: <span class="text-white font-medium" id="card-display-valid">09/26 - 09/27</span>
+                    <p class="text-brand-200 font-normal truncate">
+                      Valid: <span class="text-white font-medium" id="card-display-valid">09/26 - 09/27</span>
                     </p>
-                    <p class="text-brand-200 font-normal flex items-center gap-1.5 pt-0.5 font-sans">
-                      <span>Riwayat Klaim:</span>
-                      <span class="px-1.5 py-0.5 rounded bg-white/20 text-white font-bold text-[9px]" id="card-display-claims">0x Klaim</span>
+                    <p class="text-brand-200 font-normal flex items-center gap-1 sm:gap-1.5 pt-0.5 font-sans">
+                      <span class="text-[7.5px] sm:text-[9px]">Klaim:</span>
+                      <span class="px-1.5 py-0.2 rounded bg-white/20 text-white font-bold text-[7.5px] sm:text-[9px]" id="card-display-claims">0x Klaim</span>
                     </p>
                   </div>
                 </div>
 
-                <div class="p-1.5 bg-white rounded-xl shrink-0 shadow-lg border border-blue-900/20">
-                  <img id="card-qr-image" alt="QR Verifikasi" class="w-12 h-12 object-contain rounded-md" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=IG-KBM-2026-0889"/>
+                <div class="card-responsive-qr p-1 sm:p-1.5 bg-white rounded-lg sm:rounded-xl shrink-0 shadow-lg border border-blue-900/20">
+                  <img id="card-qr-image" alt="QR Verifikasi" class="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded-md" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&amp;data=iGood%20Priority%20Care"/>
                 </div>
               </div>
             </div>
 
             <!-- BACK SIDE -->
-            <div class="backface-hidden rotate-y-180 absolute inset-0 rounded-2xl card-face-back flex flex-col justify-between overflow-hidden text-white">
-              <div class="mag-stripe-strip w-full h-8 mt-3"></div>
+            <div class="card-face-back flex flex-col justify-between overflow-hidden text-white">
+              <div class="mag-stripe-strip card-responsive-mag w-full h-6 sm:h-8 mt-2 sm:mt-3"></div>
 
-              <div class="px-4 sm:px-5">
-                <div class="bg-white h-9 rounded-md flex items-center justify-between px-3 relative overflow-hidden shadow-inner border border-white/40">
+              <div class="px-3 sm:px-5">
+                <div class="card-responsive-sig bg-white h-7 sm:h-9 rounded-md flex items-center justify-between px-2.5 sm:px-3 relative overflow-hidden shadow-inner border border-white/40">
                   <div class="flex-1 flex items-center">
-                    <img id="card-signature-img" class="h-7 max-w-[190px] object-contain hidden" alt="Signature"/>
-                    <span class="font-script text-xl text-brand-900 font-bold tracking-wide transform -rotate-1 select-none" id="card-signature-fallback">
+                    <img id="card-signature-img" class="h-6 sm:h-7 max-w-[150px] sm:max-w-[190px] object-contain hidden" alt="Signature"/>
+                    <span class="font-script text-base sm:text-xl text-brand-900 font-bold tracking-wide transform -rotate-1 select-none leading-none" id="card-signature-fallback">
                       Ahmad Fauzi
                     </span>
                   </div>
-                  <span class="text-[8.5px] font-mono font-bold text-brand-800 tracking-wider">SECURE PASS</span>
+                  <span class="text-[7.5px] sm:text-[8.5px] font-mono font-bold text-brand-800 tracking-wider">SECURE PASS</span>
                 </div>
-                <p class="text-[8px] text-brand-200 text-center mt-0.5 tracking-wider uppercase font-medium">Digital Signature Resmi Member</p>
+                <p class="text-[7.5px] sm:text-[8px] text-brand-200 text-center mt-0.5 tracking-wider uppercase font-medium">Digital Signature Resmi Member</p>
               </div>
 
-              <div class="px-4 sm:px-5">
-                <div class="bg-sapphire-900/90 border border-brand-400/30 rounded-xl p-2 space-y-1">
-                  <div class="flex items-center justify-between text-[9.5px]">
+              <div class="px-3 sm:px-5">
+                <div class="card-responsive-perks bg-sapphire-900/90 border border-brand-400/30 rounded-lg sm:rounded-xl p-1.5 sm:p-2 space-y-0.5 sm:space-y-1">
+                  <div class="flex items-center justify-between text-[8px] sm:text-[9.5px]">
                     <span class="text-brand-200 font-semibold">Garansi Mesin User Error:</span>
                     <span class="text-white font-bold">Diskon 5-15%</span>
                   </div>
-                  <div class="flex items-center justify-between text-[9.5px] border-t border-brand-500/25 pt-1">
+                  <div class="flex items-center justify-between text-[8px] sm:text-[9.5px] border-t border-brand-500/25 pt-0.5 sm:pt-1">
                     <span class="text-brand-200 font-semibold">Total Pernah Klaim:</span>
                     <span class="text-amber-300 font-bold" id="card-back-display-claims">0 Kali</span>
                   </div>
                 </div>
               </div>
 
-              <div class="px-4 sm:px-5 pb-3 text-center space-y-0.5">
-                <div class="flex items-center justify-center gap-1.5 text-[9px] text-brand-100">
-                  <img src="IGOOD LOGO.png" alt="iGood" class="w-3.5 h-3.5 rounded-full bg-white inline-block shadow-xs shrink-0"/>
-                  <span>Customer Support: 08761 253 0880</span>
+              <div class="card-responsive-footer px-3 sm:px-5 pb-2 sm:pb-3 text-center space-y-0.5">
+                <div class="flex items-center justify-center gap-1 sm:gap-1.5 text-[8px] sm:text-[9px] text-brand-100">
+                  <img src="IGOOD LOGO.png" alt="iGood" class="w-3 h-3 sm:w-3.5 sm:h-3.5 rounded-full bg-white inline-block shadow-xs shrink-0"/>
+                  <span>CS: 08761 253 0880</span>
                   <span>·</span>
                   <span>Kebumen</span>
                 </div>
-                <p class="text-[8px] text-brand-200">Address: iGood Apple Store Kebumen, Kebumen, Indonesia</p>
+                <p class="text-[7px] sm:text-[8px] text-brand-200">iGood Apple Store Kebumen, Jawa Tengah</p>
               </div>
 
             </div>
@@ -403,29 +440,29 @@
     <section class="hidden space-y-3.5" id="tab-content-monitor">
       
       <!-- Metrics Overview -->
-      <div class="grid grid-cols-3 gap-2">
-        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-center shadow-xs">
-          <span class="text-[9.5px] font-bold text-ink-400 uppercase tracking-wider block">Total Member</span>
-          <strong class="text-xl font-extrabold text-brand-700 font-mono mt-0.5 block" id="metric-total-members">1</strong>
+      <div class="grid grid-cols-3 gap-1.5 sm:gap-2">
+        <div class="bg-white border border-slate-200 rounded-xl p-2 sm:p-2.5 text-center shadow-xs">
+          <span class="text-[8.5px] sm:text-[9.5px] font-bold text-ink-400 uppercase tracking-wider block truncate">Total Member</span>
+          <strong class="text-lg sm:text-xl font-extrabold text-brand-700 font-mono mt-0.5 block" id="metric-total-members">0</strong>
         </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-center shadow-xs">
-          <span class="text-[9.5px] font-bold text-ink-400 uppercase tracking-wider block">Total Klaim</span>
-          <strong class="text-xl font-extrabold text-brand-700 font-mono mt-0.5 block" id="metric-total-claims">2</strong>
+        <div class="bg-white border border-slate-200 rounded-xl p-2 sm:p-2.5 text-center shadow-xs">
+          <span class="text-[8.5px] sm:text-[9.5px] font-bold text-ink-400 uppercase tracking-wider block truncate">Total Klaim</span>
+          <strong class="text-lg sm:text-xl font-extrabold text-brand-700 font-mono mt-0.5 block" id="metric-total-claims">0x</strong>
         </div>
-        <div class="bg-white border border-slate-200 rounded-xl p-2.5 text-center shadow-xs">
-          <span class="text-[9.5px] font-bold text-ink-400 uppercase tracking-wider block">Status Pass</span>
-          <strong class="text-[12px] font-bold text-emerald-600 mt-1 block">100% AKTIF</strong>
+        <div class="bg-white border border-slate-200 rounded-xl p-2 sm:p-2.5 text-center shadow-xs">
+          <span class="text-[8.5px] sm:text-[9.5px] font-bold text-ink-400 uppercase tracking-wider block truncate">Status Pass</span>
+          <strong class="text-[10.5px] sm:text-[12px] font-bold text-emerald-600 mt-1 block truncate">100% AKTIF</strong>
         </div>
       </div>
 
       <!-- Member Monitoring Table/List -->
-      <div class="bg-white rounded-xl border border-slate-200 p-3.5 space-y-3 shadow-sm">
+      <div class="bg-white rounded-xl border border-slate-200 p-3 sm:p-3.5 space-y-2.5 sm:space-y-3 shadow-xs">
         <div class="flex items-center justify-between">
           <div>
-            <h3 class="text-[13px] font-bold text-ink-900">Monitoring Data Pelanggan</h3>
-            <p class="text-[10.5px] text-ink-500">Database &amp; rekap frekuensi klaim garansi</p>
+            <h3 class="text-[12.5px] sm:text-[13px] font-bold text-ink-900">Monitoring Data Pelanggan</h3>
+            <p class="text-[10px] sm:text-[10.5px] text-ink-500">Database &amp; rekap frekuensi klaim garansi</p>
           </div>
-          <button class="px-2.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-xs transition" id="btn-export-csv" type="button">
+          <button class="px-2.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold text-[10.5px] sm:text-[11px] flex items-center gap-1 shadow-xs transition" id="btn-export-csv" type="button">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             <span>Ekspor CSV</span>
           </button>
@@ -433,12 +470,12 @@
 
         <!-- Real-time Filter -->
         <div class="relative">
-          <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-2 text-[12px] text-ink-900 focus:outline-none focus:border-brand-600" id="monitor-search-input" placeholder="Cari ID kartu identitas, nama, ID member, atau WhatsApp..." type="text"/>
+          <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-8 pr-3 py-2 text-sm sm:text-[12px] text-ink-900 focus:outline-none focus:border-brand-600" id="monitor-search-input" placeholder="Cari KTP, nama, ID member, atau WA..." type="text"/>
           <svg class="absolute left-2.5 top-2.5 text-ink-400" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         </div>
 
         <!-- Member Records -->
-        <div class="space-y-2.5 max-h-[380px] overflow-y-auto hide-scrollbar" id="monitor-member-list">
+        <div class="space-y-2 max-h-[360px] sm:max-h-[420px] overflow-y-auto hide-scrollbar" id="monitor-member-list">
           <!-- Rendered dynamically -->
         </div>
       </div>
@@ -474,6 +511,14 @@
             <div class="relative">
               <span class="absolute left-3 top-2 text-[12px] text-ink-400 font-mono">+62</span>
               <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-11 pr-3 py-2 text-[12.5px] text-ink-900 font-mono focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600" id="reg-phone" placeholder="81234567890" required type="tel"/>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-[11px] font-semibold text-ink-800 mb-1">Email Pelanggan *</label>
+            <div class="relative">
+              <span class="absolute left-3 top-2 text-[12px] text-ink-400">✉️</span>
+              <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-[12.5px] text-ink-900 focus:outline-none focus:border-brand-600 focus:ring-1 focus:ring-brand-600" id="reg-email" placeholder="nama@email.com" required type="email"/>
             </div>
           </div>
 
@@ -518,24 +563,37 @@
             </div>
           </div>
 
-          <!-- Signature Pad -->
-          <div class="space-y-1 pt-1">
-            <div class="flex items-center justify-between">
-              <div>
-                <label class="text-[11px] font-semibold text-ink-800 block leading-tight">Persetujuan Tanda Tangan Digital *</label>
-                <span class="text-[9.5px] text-ink-500">Sentuh layar untuk membubuhkan tanda tangan sah</span>
+          <!-- Signature Trigger & Preview -->
+          <div class="space-y-1.5 pt-1">
+            <label class="text-[11px] font-semibold text-ink-800 block leading-tight">Persetujuan Tanda Tangan Digital *</label>
+            
+            <!-- Unsigned State: Prominent Button to Open Signing Screen -->
+            <div id="sign-unfilled-box" class="border-2 border-dashed border-slate-300 hover:border-brand-500 rounded-xl p-3.5 text-center bg-slate-50/60 hover:bg-brand-50/20 cursor-pointer transition active:scale-98 select-none" onclick="openSignatureModal()">
+              <div class="w-9 h-9 rounded-full bg-brand-50 border border-brand-200 text-brand-700 flex items-center justify-center mx-auto text-base shadow-2xs">
+                ✍️
               </div>
-              <button class="text-[10.5px] text-brand-700 hover:text-brand-800 font-semibold shrink-0" id="btn-clear-canvas" type="button">Ulangi Coretan</button>
+              <p class="text-[11.5px] font-bold text-ink-800 mt-1.5">Klik untuk Membubuhkan Tanda Tangan</p>
+              <p class="text-[10px] text-ink-500">Buka layar khusus untuk coret tanda tangan digital</p>
             </div>
-            <div class="relative bg-white rounded-lg overflow-hidden border border-slate-300 shadow-inner">
-              <canvas class="w-full h-24 touch-none cursor-crosshair bg-white" height="120" id="signature-canvas" width="380"></canvas>
-              <div class="pointer-events-none absolute inset-0 flex items-center justify-center text-[11px] text-ink-400 font-medium" id="sign-placeholder">
-                ✍️ Goreskan tanda tangan pelanggan di sini
+
+            <!-- Signed State: Preview & Edit Option -->
+            <div id="sign-filled-box" class="hidden p-2.5 rounded-xl border border-emerald-300 bg-emerald-50/50 flex items-center justify-between gap-2 shadow-2xs">
+              <div class="flex items-center gap-2.5 min-w-0">
+                <div class="w-16 h-10 rounded-lg border border-slate-200 bg-white p-1 flex items-center justify-center shrink-0 shadow-xs">
+                  <img id="sign-preview-img" class="max-h-full max-w-full object-contain" alt="Tanda Tangan Pelanggan"/>
+                </div>
+                <div class="min-w-0">
+                  <span class="text-[11px] font-bold text-emerald-800 block truncate">✓ Tanda Tangan Tersimpan</span>
+                  <span class="text-[9.5px] text-ink-500 truncate block">Siap diterbitkan ke kartu resmi</span>
+                </div>
               </div>
+              <button type="button" onclick="openSignatureModal()" class="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 hover:bg-slate-50 active:scale-95 text-[10.5px] font-bold text-brand-700 shadow-2xs transition shrink-0">
+                Ubah
+              </button>
             </div>
           </div>
 
-          <button class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-[13px] shadow-md transition" type="submit">
+          <button class="w-full py-3 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-98 text-white font-bold text-[13px] shadow-sm transition" type="submit">
             Simpan &amp; Terbitkan Kartu Member (Rp 25.000)
           </button>
         </form>
@@ -569,21 +627,21 @@
         </div>
 
         <!-- 3 Highlight Pills -->
-        <div class="grid grid-cols-3 gap-2 text-center text-[10px]">
-          <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
-            <span class="text-ink-400 block text-[9px]">Iuran Member</span>
-            <strong class="text-brand-700 text-[11px]">Rp 25.000</strong>
-            <span class="text-ink-400 block text-[8.5px]">/ 1 Tahun</span>
+        <div class="grid grid-cols-3 gap-1.5 sm:gap-2 text-center text-[10px]">
+          <div class="p-1.5 sm:p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-ink-400 block text-[8px] sm:text-[9px] truncate">Iuran Member</span>
+            <strong class="text-brand-700 text-[10.5px] sm:text-[11px] block">Rp 25.000</strong>
+            <span class="text-ink-400 block text-[7.5px] sm:text-[8.5px]">/ 1 Tahun</span>
           </div>
-          <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
-            <span class="text-ink-400 block text-[9px]">Masa Aktif</span>
-            <strong class="text-emerald-700 text-[11px]">12 Bulan</strong>
-            <span class="text-ink-400 block text-[8.5px]">365 Hari</span>
+          <div class="p-1.5 sm:p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-ink-400 block text-[8px] sm:text-[9px] truncate">Masa Aktif</span>
+            <strong class="text-emerald-700 text-[10.5px] sm:text-[11px] block">12 Bulan</strong>
+            <span class="text-ink-400 block text-[7.5px] sm:text-[8.5px]">365 Hari</span>
           </div>
-          <div class="p-2 rounded-xl bg-slate-50 border border-slate-200/80">
-            <span class="text-ink-400 block text-[9px]">Validasi Data</span>
-            <strong class="text-ink-800 text-[11px]">No. KTP</strong>
-            <span class="text-ink-400 block text-[8.5px]">Cloud Database</span>
+          <div class="p-1.5 sm:p-2 rounded-xl bg-slate-50 border border-slate-200/80">
+            <span class="text-ink-400 block text-[8px] sm:text-[9px] truncate">Validasi Data</span>
+            <strong class="text-ink-800 text-[10.5px] sm:text-[11px] block">No. KTP</strong>
+            <span class="text-ink-400 block text-[7.5px] sm:text-[8.5px]">Cloud Database</span>
           </div>
         </div>
 
@@ -677,7 +735,7 @@
 
         <!-- Tombol Aksi Utama -->
         <div class="pt-1">
-          <button type="button" onclick="goToRegisterTab()" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 text-white font-bold text-[12px] shadow-sm transition flex items-center justify-center gap-1.5 font-display">
+          <button type="button" onclick="goToRegisterTab()" class="w-full py-2.5 rounded-xl bg-brand-600 hover:bg-brand-700 active:scale-98 text-white font-bold text-[12px] shadow-sm transition flex items-center justify-center gap-1.5 font-display">
             <span>Saya Paham &amp; Lanjut Daftar Member</span>
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
           </button>
@@ -689,15 +747,77 @@
 
   </main>
 
+  <!-- BOTTOM NAVIGATION BAR (Thumb Friendly for all Mobile Phones) -->
+  <nav id="app-bottom-nav" class="sticky bottom-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/90 px-2 pt-1.5 pb-[max(0.5rem,env(safe-area-inset-bottom))] shadow-lg shrink-0">
+    <div class="grid grid-cols-4 gap-1">
+      <button class="nav-tab-btn active py-1.5 px-0.5 rounded-xl transition-all flex flex-col items-center justify-center gap-1 text-center touch-manipulation active:scale-95" id="tab-btn-verify">
+        <svg class="w-5 h-5 shrink-0 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span class="text-[10px] sm:text-[11px] font-semibold leading-none">Keaslian</span>
+      </button>
+      <button class="nav-tab-btn py-1.5 px-0.5 rounded-xl transition-all flex flex-col items-center justify-center gap-1 text-center touch-manipulation active:scale-95" id="tab-btn-monitor">
+        <svg class="w-5 h-5 shrink-0 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span class="text-[10px] sm:text-[11px] font-semibold leading-none">Monitoring</span>
+      </button>
+      <button class="nav-tab-btn py-1.5 px-0.5 rounded-xl transition-all flex flex-col items-center justify-center gap-1 text-center touch-manipulation active:scale-95" id="tab-btn-register">
+        <svg class="w-5 h-5 shrink-0 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+        <span class="text-[10px] sm:text-[11px] font-semibold leading-none">Daftar</span>
+      </button>
+      <button class="nav-tab-btn py-1.5 px-0.5 rounded-xl transition-all flex flex-col items-center justify-center gap-1 text-center touch-manipulation active:scale-95" id="tab-btn-terms">
+        <svg class="w-5 h-5 shrink-0 transition-transform" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+        <span class="text-[10px] sm:text-[11px] font-semibold leading-none">S&amp;K</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- MODAL: DEDICATED DIGITAL SIGNATURE PAD -->
+  <div class="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs hidden items-end sm:items-center justify-center p-0 sm:p-4" id="signature-modal">
+    <div class="bg-white border border-slate-200 w-full max-w-md rounded-t-3xl sm:rounded-2xl p-4 sm:p-5 space-y-3 shadow-2xl pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div class="w-10 h-1 rounded-full bg-slate-300 mx-auto mb-1 sm:hidden"></div>
+      <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
+        <div>
+          <h4 class="font-bold text-[13.5px] text-ink-900 flex items-center gap-1.5">
+            <span>✍️</span> Layar Tanda Tangan Digital
+          </h4>
+          <p class="text-[10.5px] text-ink-500 mt-0.5">Bubuhkan tanda tangan pelanggan langsung pada layar sentuh</p>
+        </div>
+        <button class="text-ink-400 hover:text-ink-700 text-xl font-bold p-1 touch-manipulation" onclick="closeSignatureModal()">&times;</button>
+      </div>
+
+      <!-- Drawing Canvas Area -->
+      <div class="relative bg-slate-50/60 rounded-xl overflow-hidden border border-slate-300 shadow-inner">
+        <canvas class="w-full h-44 touch-none cursor-crosshair bg-white block" id="signature-canvas"></canvas>
+        <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center text-[11.5px] text-ink-400 font-medium px-4 text-center select-none" id="sign-placeholder">
+          <span>✍️ Goreskan tanda tangan pelanggan di sini</span>
+          <span class="text-[10px] text-ink-400/80 mt-0.5">Sentuh dengan jari atau stylus pen</span>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2 pt-1">
+        <button type="button" class="px-3 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-ink-700 font-semibold rounded-xl text-[11.5px] transition flex items-center gap-1 shrink-0" id="btn-clear-canvas" onclick="clearModalSign()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+          <span>Ulangi Coretan</span>
+        </button>
+        <button type="button" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-ink-700 font-semibold rounded-xl text-[11.5px] transition" onclick="closeSignatureModal()">
+          Batal
+        </button>
+        <button type="button" class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold rounded-xl text-[11.5px] shadow-sm transition flex items-center justify-center gap-1" onclick="saveModalSign()">
+          <span>Simpan Tanda Tangan</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODAL: EDIT DATA MEMBER -->
-  <div class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden items-end sm:items-center justify-center p-3" id="edit-member-modal">
-    <div class="bg-white border border-slate-200 w-full max-w-sm rounded-2xl p-4 space-y-3 shadow-2xl">
+  <div class="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs hidden items-end sm:items-center justify-center p-0 sm:p-3" id="edit-member-modal">
+    <div class="bg-white border border-slate-200 w-full max-w-sm rounded-t-3xl sm:rounded-2xl p-4 sm:p-5 space-y-3 shadow-2xl max-h-[90dvh] overflow-y-auto pb-[max(1rem,env(safe-area-inset-bottom))]">
+      <div class="w-10 h-1 rounded-full bg-slate-300 mx-auto mb-1 sm:hidden"></div>
       <div class="flex items-center justify-between border-b border-slate-100 pb-2.5">
         <div>
           <h4 class="font-bold text-[13.5px] text-ink-900">Edit Data Member</h4>
           <p class="text-[10px] text-brand-700 font-mono" id="edit-modal-subtitle">ID: IG-KBM-2026-0889</p>
         </div>
-        <button class="text-ink-400 hover:text-ink-700 text-lg font-bold" onclick="closeEditMemberModal()">&times;</button>
+        <button class="text-ink-400 hover:text-ink-700 text-xl font-bold p-1 touch-manipulation" onclick="closeEditMemberModal()">&times;</button>
       </div>
 
       <form class="space-y-2.5" id="form-edit-member">
@@ -705,38 +825,46 @@
 
         <div>
           <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">Nama Lengkap (Sesuai KTP) *</label>
-          <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-ink-900 focus:outline-none focus:border-brand-600" id="edit-input-name" required type="text"/>
+          <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm sm:text-[12px] text-ink-900 focus:outline-none focus:border-brand-600" id="edit-input-name" required type="text"/>
         </div>
 
         <div>
           <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">ID Kartu Identitas (Nomor KTP / NIK) *</label>
-          <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-ktp" required type="text"/>
+          <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm sm:text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-ktp" required type="text"/>
         </div>
 
         <div>
           <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">Nomor WhatsApp *</label>
           <div class="relative">
             <span class="absolute left-3 top-2 text-[12px] text-ink-400 font-mono">+62</span>
-            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-11 pr-3 py-2 text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-phone" required type="tel"/>
+            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-11 pr-3 py-2 text-sm sm:text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-phone" required type="tel"/>
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">Email Pelanggan</label>
+          <div class="relative">
+            <span class="absolute left-3 top-2 text-[12px] text-ink-400">✉️</span>
+            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg pl-9 pr-3 py-2 text-sm sm:text-[12px] text-ink-900 focus:outline-none focus:border-brand-600" id="edit-input-email" placeholder="nama@email.com" type="email"/>
           </div>
         </div>
 
         <div class="grid grid-cols-2 gap-2">
           <div>
             <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">Masa Berlaku Kartu</label>
-            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-validity" placeholder="09/26 - 09/27" type="text"/>
+            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm sm:text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-validity" placeholder="09/26 - 09/27" type="text"/>
           </div>
           <div>
             <label class="block text-[10.5px] font-semibold text-ink-700 mb-1">Total Klaim (Kali)</label>
-            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-claims" min="0" type="number" value="0"/>
+            <input class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm sm:text-[12px] text-ink-900 font-mono focus:outline-none focus:border-brand-600" id="edit-input-claims" min="0" type="number" value="0"/>
           </div>
         </div>
 
         <div class="flex items-center gap-2 pt-1.5">
-          <button class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 text-ink-700 font-bold rounded-xl text-[12px] transition" onclick="closeEditMemberModal()" type="button">
+          <button class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-ink-700 font-bold rounded-xl text-[12px] transition touch-manipulation" onclick="closeEditMemberModal()" type="button">
             Batal
           </button>
-          <button class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 text-white font-bold rounded-xl text-[12px] shadow-sm transition" type="submit">
+          <button class="flex-1 py-2.5 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white font-bold rounded-xl text-[12px] shadow-sm transition touch-manipulation" type="submit">
             Simpan Perubahan
           </button>
         </div>
@@ -744,12 +872,109 @@
     </div>
   </div>
 
+  <!-- MODAL: KONFIRMASI HAPUS MEMBER -->
+  <div class="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs hidden items-end sm:items-center justify-center p-0 sm:p-4" id="confirm-delete-modal">
+    <div class="bg-white border border-slate-200 w-full max-w-xs sm:max-w-sm rounded-t-3xl sm:rounded-2xl p-5 space-y-3.5 shadow-2xl text-center transform transition-all pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <div class="w-10 h-1 rounded-full bg-slate-300 mx-auto mb-1 sm:hidden"></div>
+      <div class="w-12 h-12 rounded-full bg-rose-50 border border-rose-200 text-rose-600 flex items-center justify-center mx-auto text-xl">
+        🗑️
+      </div>
+      <div class="space-y-1">
+        <h4 class="font-bold text-[14px] text-ink-900">Hapus Member Permanen?</h4>
+        <p class="text-[11px] text-ink-600 leading-relaxed" id="confirm-delete-text">
+          Member ini beserta seluruh data dan riwayat klaim akan dihapus permanen dari Cloud Database.
+        </p>
+      </div>
+      <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/80 text-left space-y-1 text-[10.5px]">
+        <div class="flex justify-between">
+          <span class="text-ink-400">Nama:</span>
+          <strong class="text-ink-800" id="delete-modal-target-name">-</strong>
+        </div>
+        <div class="flex justify-between font-mono">
+          <span class="text-ink-400">No. KTP:</span>
+          <span class="text-ink-700" id="delete-modal-target-ktp">-</span>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 pt-1">
+        <button type="button" class="flex-1 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-ink-700 font-bold rounded-xl text-[12px] transition touch-manipulation" onclick="closeConfirmDeleteModal()">
+          Batal
+        </button>
+        <button type="button" id="btn-execute-delete" class="flex-1 py-2.5 bg-rose-600 hover:bg-rose-700 active:scale-95 text-white font-bold rounded-xl text-[12px] shadow-sm transition flex items-center justify-center gap-1.5 touch-manipulation" onclick="executeDeleteMember()">
+          <span id="execute-delete-text">Hapus Member</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+<!-- FLOATING TOAST NOTIFICATIONS -->
+  <div id="toast-container" class="fixed top-[max(0.75rem,env(safe-area-inset-top))] left-1/2 -translate-x-1/2 z-50 flex flex-col gap-2 pointer-events-none w-full max-w-sm px-4"></div>
+
 </div>
 
 <!-- APPLICATION JAVASCRIPT: MONITORING & VERIFICATION ENGINE -->
 <script>
   /* =========================================================
-     1. CLOUD DATABASE INTEGRATION & LOCAL DATABASE
+     1. FLOATING TOAST NOTIFICATION SYSTEM
+     ========================================================= */
+  function showToast(message, type = 'info', duration = 3000) {
+    const container = document.getElementById('toast-container');
+    if (!container) return null;
+
+    const toast = document.createElement('div');
+
+    function applyToastContent(msg, t) {
+      toast.className = 'pointer-events-auto flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl shadow-lg border text-[11.5px] font-semibold transition-all duration-300 transform translate-y-0 opacity-100';
+      let icon = '';
+      if (t === 'success') {
+        toast.classList.add('bg-white', 'text-emerald-800', 'border-emerald-200', 'shadow-emerald-900/10');
+        icon = '<span class="w-5 h-5 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-xs shrink-0 font-bold">✓</span>';
+      } else if (t === 'error') {
+        toast.classList.add('bg-white', 'text-rose-800', 'border-rose-200', 'shadow-rose-900/10');
+        icon = '<span class="w-5 h-5 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center text-xs shrink-0 font-bold">✕</span>';
+      } else if (t === 'loading') {
+        toast.classList.add('bg-white', 'text-brand-800', 'border-brand-200', 'shadow-brand-900/10');
+        icon = '<svg class="w-4 h-4 text-brand-600 animate-spin shrink-0" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>';
+      } else if (t === 'warning') {
+        toast.classList.add('bg-white', 'text-amber-800', 'border-amber-200', 'shadow-amber-900/10');
+        icon = '<span class="w-5 h-5 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center text-xs shrink-0">⚠️</span>';
+      } else {
+        toast.classList.add('bg-white', 'text-ink-800', 'border-slate-200', 'shadow-slate-900/10');
+        icon = '<span class="w-5 h-5 rounded-full bg-slate-100 text-ink-600 flex items-center justify-center text-xs shrink-0">ℹ️</span>';
+      }
+      toast.innerHTML = `${icon}<span class="flex-1 leading-snug">${msg}</span>`;
+    }
+
+    applyToastContent(message, type);
+    container.appendChild(toast);
+
+    let timeoutId = null;
+    const dismiss = () => {
+      toast.classList.remove('translate-y-0', 'opacity-100');
+      toast.classList.add('translate-y-[-10px]', 'opacity-0');
+      setTimeout(() => {
+        if (toast.parentNode) toast.parentNode.removeChild(toast);
+      }, 300);
+    };
+
+    if (duration > 0) {
+      timeoutId = setTimeout(dismiss, duration);
+    }
+
+    return {
+      element: toast,
+      dismiss,
+      update(newMsg, newType = 'info', newDuration = 3000) {
+        if (timeoutId) clearTimeout(timeoutId);
+        applyToastContent(newMsg, newType);
+        if (newDuration > 0) {
+          timeoutId = setTimeout(dismiss, newDuration);
+        }
+      }
+    };
+  }
+
+  /* =========================================================
+     2. CLOUD DATABASE INTEGRATION & CACHE
      ========================================================= */
   const CLOUD_DB_URL = 'https://ypzdwdtqwhbfzzudsxds.supabase.co';
   const CLOUD_DB_KEY = 'sb_publishable_mT4_zRvXEJC8msjP91z_AA_gdpIQfTm';
@@ -763,7 +988,7 @@
     }
   }
 
-  const STORAGE_KEY = 'igood_members_v3';
+  const STORAGE_KEY = 'igood_members_v4';
   let membersDb = [];
   let currentVerifiedMember = null;
 
@@ -774,17 +999,17 @@
     if (!badge || !dot || !label) return;
 
     if (status === 'connected') {
-      badge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 border border-emerald-200 text-[10px] font-bold text-emerald-700';
-      dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse';
-      label.innerText = text || 'DATABASE CLOUD';
+      badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-emerald-50/90 border border-emerald-200/80 text-[9px] sm:text-[9.5px] font-bold text-emerald-700 shadow-2xs whitespace-nowrap';
+      dot.className = 'w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0';
+      label.innerText = text || 'ONLINE';
     } else if (status === 'syncing') {
-      badge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 border border-brand-200 text-[10px] font-bold text-brand-700';
-      dot.className = 'w-1.5 h-1.5 rounded-full bg-brand-500 animate-ping';
-      label.innerText = text || 'MENYINKRONKAN...';
+      badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-brand-50/90 border border-brand-200/80 text-[9px] sm:text-[9.5px] font-bold text-brand-700 shadow-2xs whitespace-nowrap';
+      dot.className = 'w-1.5 h-1.5 rounded-full bg-brand-500 animate-ping shrink-0';
+      label.innerText = text || 'SYNCING...';
     } else {
-      badge.className = 'inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-amber-50 border border-amber-200 text-[10px] font-bold text-amber-700';
-      dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500';
-      label.innerText = text || 'MODE LOKAL';
+      badge.className = 'inline-flex items-center gap-1 px-2 py-0.5 sm:py-1 rounded-full bg-amber-50/90 border border-amber-200/80 text-[9px] sm:text-[9.5px] font-bold text-amber-700 shadow-2xs whitespace-nowrap';
+      dot.className = 'w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0';
+      label.innerText = text || 'OFFLINE';
     }
   }
 
@@ -794,21 +1019,11 @@
       if (raw) {
         membersDb = JSON.parse(raw).map(m => ({
           ...m,
-          ktp: m.ktp || (m.imei ? '330501230999' + m.imei : '3305012309990889')
+          ktp: m.ktp || '',
+          email: m.email || ''
         }));
       } else {
-        // Initial Demo Member
-        membersDb = [{
-          id: 'IG-KBM-2026-0889',
-          name: 'Ahmad Fauzi',
-          ktp: '3305012309990001',
-          phone: '87612530880',
-          validity: '09/26 - 09/27',
-          signatureData: null,
-          registeredAt: '2026-09-08T08:00:00.000Z',
-          claimCount: 2
-        }];
-        saveMembersDb();
+        membersDb = [];
       }
     } catch (e) {
       console.error(e);
@@ -825,12 +1040,12 @@
     updateMetrics();
   }
 
-  async function syncFromCloudDb() {
+  async function syncFromCloudDb(showNotice = false) {
     if (!cloudDbClient) {
-      updateCloudStatus('local', 'MODE LOKAL');
+      updateCloudStatus('local', 'OFFLINE');
       return;
     }
-    updateCloudStatus('syncing', 'MENYINKRONKAN...');
+    updateCloudStatus('syncing', 'SYNCING...');
     try {
       const { data, error } = await cloudDbClient
         .from('members')
@@ -839,52 +1054,52 @@
 
       if (error) {
         console.warn('Database fetch error:', error);
-        updateCloudStatus('local', 'MODE OFFLINE');
+        updateCloudStatus('local', 'OFFLINE');
         return;
       }
 
-      if (data && data.length > 0) {
-        membersDb = data.map(m => ({
-          id: m.id,
-          name: m.name,
-          ktp: m.ktp || '',
-          phone: m.phone || '',
-          validity: m.validity || '09/26 - 09/27',
-          signatureData: m.signature_data,
-          registeredAt: m.created_at,
-          claimCount: m.claim_count != null ? m.claim_count : 0
-        }));
-        saveMembersDb();
-        renderMonitoringList(monitorSearchInput ? monitorSearchInput.value : '');
+      // Cloud table is the Single Source of Truth (SSOT)
+      membersDb = (data || []).map(m => ({
+        id: m.id,
+        name: m.name,
+        ktp: m.ktp || '',
+        phone: m.phone || '',
+        email: m.email || '',
+        validity: m.validity || '09/26 - 09/27',
+        signatureData: m.signature_data,
+        registeredAt: m.created_at,
+        claimCount: m.claim_count != null ? m.claim_count : 0
+      }));
+      saveMembersDb();
+      renderMonitoringList(monitorSearchInput ? monitorSearchInput.value : '');
 
-        // Refresh currently active card display
-        if (currentVerifiedMember) {
-          const found = membersDb.find(m => m.id === currentVerifiedMember.id || m.ktp === currentVerifiedMember.ktp);
-          if (found) {
-            currentVerifiedMember = found;
-            showValidCardState(found);
-          }
-        } else if (verifySearchInput && verifySearchInput.value) {
-          verifyMemberCard(verifySearchInput.value);
+      // Refresh currently verified card state
+      if (currentVerifiedMember) {
+        const found = membersDb.find(m => m.id === currentVerifiedMember.id || (m.ktp && m.ktp === currentVerifiedMember.ktp));
+        if (found) {
+          currentVerifiedMember = found;
+          showValidCardState(found);
+        } else {
+          currentVerifiedMember = null;
+          showEmptyCardState();
         }
+      } else if (verifySearchInput && verifySearchInput.value.trim()) {
+        verifyMemberCard(verifySearchInput.value);
       } else if (membersDb.length > 0) {
-        // Seed cloud table if blank
-        for (const m of membersDb) {
-          await cloudDbClient.from('members').upsert([{
-            id: m.id,
-            name: m.name,
-            ktp: m.ktp,
-            phone: m.phone,
-            validity: m.validity,
-            signature_data: m.signatureData,
-            claim_count: m.claimCount
-          }]);
-        }
+        currentVerifiedMember = membersDb[0];
+        showValidCardState(membersDb[0]);
+        if (verifySearchInput) verifySearchInput.value = membersDb[0].ktp || membersDb[0].id;
+      } else {
+        showEmptyCardState();
       }
-      updateCloudStatus('connected', 'DATABASE CLOUD');
+
+      updateCloudStatus('connected', 'ONLINE');
+      if (showNotice) {
+        showToast('Data berhasil disinkronkan dari database cloud', 'success', 2500);
+      }
     } catch (err) {
       console.error('Koneksi database gagal:', err);
-      updateCloudStatus('local', 'MODE OFFLINE');
+      updateCloudStatus('local', 'OFFLINE');
     }
   }
 
@@ -892,18 +1107,21 @@
     if (!cloudDbClient) return;
     try {
       cloudDbClient
-        .channel('public:members')
-        .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, () => {
-          syncFromCloudDb();
+        .channel('public_members_realtime')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'members' }, (payload) => {
+          console.log('Perubahan database realtime terdeteksi:', payload.eventType);
+          syncFromCloudDb(false);
         })
-        .subscribe();
+        .subscribe((status) => {
+          console.log('Status Realtime:', status);
+        });
     } catch (e) {
       console.warn('Realtime subscription error:', e);
     }
   }
 
   /* =========================================================
-     2. NAVIGATION TABS (VERIFY, MONITOR, REGISTER)
+     3. NAVIGATION TABS
      ========================================================= */
   const navTabs = [
     { btn: document.getElementById('tab-btn-verify'), content: document.getElementById('tab-content-verify') },
@@ -921,9 +1139,15 @@
       btn.classList.add('active');
       content.classList.remove('hidden');
 
+      const mainEl = document.querySelector('main');
+      if (mainEl) mainEl.scrollTop = 0;
+
       if (btn.id === 'tab-btn-monitor') {
         renderMonitoringList();
         updateMetrics();
+      }
+      if (btn.id === 'tab-btn-register') {
+        setTimeout(resizeCanvas, 60);
       }
     });
   });
@@ -939,7 +1163,7 @@
   };
 
   /* =========================================================
-     3. 3D CARD FLIP
+     4. 3D CARD FLIP
      ========================================================= */
   const cardContainer = document.getElementById('card-flipper-container');
   const cardInner = document.getElementById('card-inner');
@@ -955,7 +1179,7 @@
   });
 
   /* =========================================================
-     4. CARD AUTHENTICITY & CLAIM VERIFICATION ENGINE
+     5. VERIFICATION LOGIC & CARD STATES
      ========================================================= */
   const verifySearchInput = document.getElementById('verify-search-input');
   const btnDoVerify = document.getElementById('btn-do-verify');
@@ -970,16 +1194,18 @@
   const cardDisplayId = document.getElementById('card-display-id');
   const cardDisplayKtp = document.getElementById('card-display-ktp');
   const cardDisplayValid = document.getElementById('card-display-valid');
+  const cardDisplayClaims = document.getElementById('card-display-claims');
+  const cardBackDisplayClaims = document.getElementById('card-back-display-claims');
   const cardQrImage = document.getElementById('card-qr-image');
   const cardSigImg = document.getElementById('card-signature-img');
   const cardSigFallback = document.getElementById('card-signature-fallback');
 
-  const cardDisplayClaims = document.getElementById('card-display-claims');
-  const cardBackDisplayClaims = document.getElementById('card-back-display-claims');
-
   function verifyMemberCard(query) {
     const q = (query || '').trim().toLowerCase();
-    if (!q) return;
+    if (!q) {
+      showEmptyCardState();
+      return;
+    }
 
     const found = membersDb.find(m =>
       (m.ktp && m.ktp.toLowerCase() === q) ||
@@ -991,27 +1217,33 @@
     if (found) {
       currentVerifiedMember = found;
       showValidCardState(found);
+      showToast(`Kartu resmi ditemukan: ${found.name}`, 'success', 2500);
     } else {
       currentVerifiedMember = null;
       showInvalidCardState(query);
+      showToast(`Data "${query}" tidak terdaftar di database`, 'error', 3000);
     }
   }
 
   function showValidCardState(m) {
-    const count = m.claimCount != null ? m.claimCount : (m.claimHistory ? m.claimHistory.length : 0);
+    const count = m.claimCount != null ? m.claimCount : 0;
 
-    // 1. Status Banner: Valid & Genuine
-    authStatusBox.className = 'rounded-xl border border-emerald-300 bg-emerald-50/80 p-3.5 flex items-center justify-between shadow-sm';
-    authStatusIcon.className = 'w-9 h-9 rounded-full bg-emerald-100 border border-emerald-300 flex items-center justify-center text-emerald-700 shrink-0 text-lg font-bold';
-    authStatusIcon.innerText = '✓';
-    authStatusTitle.className = 'font-bold text-[13px] text-emerald-800 tracking-tight';
-    authStatusTitle.innerText = 'KARTU ASLI & TERVERIFIKASI RESMI';
-    authStatusDesc.className = 'text-[10.5px] text-emerald-700';
-    authStatusDesc.innerText = `Terdaftar resmi a.n ${m.name} · No. Identitas: ${m.ktp || '-'} · Sudah ${count}x Klaim`;
-    authStatusTag.className = 'px-2 py-1 rounded bg-emerald-200 border border-emerald-400 text-emerald-900 text-[10px] font-bold font-mono';
-    authStatusTag.innerText = `VALID (${count}x KLAIM)`;
+    if (authStatusBox) {
+      authStatusBox.className = 'flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-50/90 border border-emerald-200 text-[10.5px] sm:text-[11px] transition-all text-emerald-900';
+    }
+    if (authStatusIcon) {
+      authStatusIcon.className = 'text-xs shrink-0 text-emerald-600 font-bold';
+      authStatusIcon.innerText = '✓';
+    }
+    if (authStatusTitle) {
+      authStatusTitle.className = 'font-semibold truncate text-emerald-900';
+      authStatusTitle.innerText = `Kartu Asli Terverifikasi: ${m.name} (${count}x Klaim)`;
+    }
+    if (authStatusTag) {
+      authStatusTag.className = 'text-[9px] sm:text-[9.5px] font-mono font-bold text-emerald-800 uppercase tracking-wider shrink-0 px-1.5 py-0.5 rounded bg-emerald-200/80';
+      authStatusTag.innerText = 'VALID';
+    }
 
-    // 2. Card Info Update
     cardDisplayName.innerText = m.name.toUpperCase();
     cardDisplayId.innerText = m.id;
     if (cardDisplayKtp) cardDisplayKtp.innerText = m.ktp || '-';
@@ -1032,15 +1264,21 @@
   }
 
   function showInvalidCardState(query) {
-    authStatusBox.className = 'rounded-xl border border-rose-300 bg-rose-50/90 p-3.5 flex items-center justify-between shadow-sm';
-    authStatusIcon.className = 'w-9 h-9 rounded-full bg-rose-100 border border-rose-300 flex items-center justify-center text-rose-700 shrink-0 text-lg font-bold';
-    authStatusIcon.innerText = '✕';
-    authStatusTitle.className = 'font-bold text-[13px] text-rose-800 tracking-tight';
-    authStatusTitle.innerText = 'KARTU TIDAK VALID / TIDAK TERDAFTAR';
-    authStatusDesc.className = 'text-[10.5px] text-rose-700';
-    authStatusDesc.innerText = `ID atau data "${query}" tidak ditemukan di sistem. Waspada kartu palsu!`;
-    authStatusTag.className = 'px-2 py-1 rounded bg-rose-200 border border-rose-400 text-rose-900 text-[10px] font-bold font-mono';
-    authStatusTag.innerText = 'TIDAK VALID';
+    if (authStatusBox) {
+      authStatusBox.className = 'flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-rose-50/90 border border-rose-200 text-[10.5px] sm:text-[11px] transition-all text-rose-900';
+    }
+    if (authStatusIcon) {
+      authStatusIcon.className = 'text-xs shrink-0 text-rose-600 font-bold';
+      authStatusIcon.innerText = '✕';
+    }
+    if (authStatusTitle) {
+      authStatusTitle.className = 'font-semibold truncate text-rose-900';
+      authStatusTitle.innerText = `Tidak Valid: Data "${query}" tidak terdaftar`;
+    }
+    if (authStatusTag) {
+      authStatusTag.className = 'text-[9px] sm:text-[9.5px] font-mono font-bold text-rose-800 uppercase tracking-wider shrink-0 px-1.5 py-0.5 rounded bg-rose-200/80';
+      authStatusTag.innerText = 'TIDAK VALID';
+    }
 
     cardDisplayName.innerText = 'TIDAK TERDAFTAR';
     cardDisplayId.innerText = query.toUpperCase();
@@ -1048,6 +1286,37 @@
     cardDisplayValid.innerText = 'TIDAK BERLAKU';
     if (cardDisplayClaims) cardDisplayClaims.innerText = '0x Klaim';
     if (cardBackDisplayClaims) cardBackDisplayClaims.innerText = '0 Kali';
+    cardSigImg.classList.add('hidden');
+    cardSigFallback.classList.remove('hidden');
+    cardSigFallback.innerText = 'Tidak Terdaftar';
+  }
+
+  function showEmptyCardState() {
+    if (authStatusBox) {
+      authStatusBox.className = 'flex items-center justify-between px-2 py-1 rounded-lg bg-slate-50/80 border border-slate-200/60 text-[10.5px] sm:text-[11px] transition-all text-ink-600';
+    }
+    if (authStatusIcon) {
+      authStatusIcon.className = 'text-xs shrink-0 text-ink-400';
+      authStatusIcon.innerText = '🔍';
+    }
+    if (authStatusTitle) {
+      authStatusTitle.className = 'font-medium truncate text-ink-600';
+      authStatusTitle.innerText = 'Status: Siap verifikasi kartu member';
+    }
+    if (authStatusTag) {
+      authStatusTag.className = 'text-[9px] sm:text-[9.5px] font-mono font-bold text-slate-500 uppercase tracking-wider shrink-0 px-1.5 py-0.5 rounded bg-slate-200/70';
+      authStatusTag.innerText = 'STANDBY';
+    }
+
+    cardDisplayName.innerText = 'PRIORITY MEMBER';
+    cardDisplayId.innerText = 'IG-KBM-XXXX-XXXX';
+    if (cardDisplayKtp) cardDisplayKtp.innerText = '----------------';
+    cardDisplayValid.innerText = '09/26 - 09/27';
+    if (cardDisplayClaims) cardDisplayClaims.innerText = '0x Klaim';
+    if (cardBackDisplayClaims) cardBackDisplayClaims.innerText = '0 Kali';
+    cardSigImg.classList.add('hidden');
+    cardSigFallback.classList.remove('hidden');
+    cardSigFallback.innerText = 'iGood Priority';
   }
 
   btnDoVerify.addEventListener('click', () => {
@@ -1060,42 +1329,58 @@
   });
 
   /* =========================================================
-     6. MONITORING TAB (DASHBOARD & DATA MEMBER)
+     6. MONITORING & STATS ENGINE
      ========================================================= */
   const monitorMemberList = document.getElementById('monitor-member-list');
   const monitorSearchInput = document.getElementById('monitor-search-input');
   const metricTotalMembers = document.getElementById('metric-total-members');
   const metricTotalClaims = document.getElementById('metric-total-claims');
-  const btnExportCsv = document.getElementById('btn-export-csv');
 
   function updateMetrics() {
-    metricTotalMembers.innerText = membersDb.length;
-    const totalClaims = membersDb.reduce((acc, m) => acc + (m.claimCount || (m.claimHistory ? m.claimHistory.length : 0)), 0);
-    metricTotalClaims.innerText = totalClaims;
+    if (metricTotalMembers) metricTotalMembers.innerText = membersDb.length;
+    const totalClaims = membersDb.reduce((acc, m) => acc + (m.claimCount || 0), 0);
+    if (metricTotalClaims) metricTotalClaims.innerText = `${totalClaims}x`;
   }
 
-  function renderMonitoringList(query = '') {
+  function renderMonitoringList(filter = '') {
+    if (!monitorMemberList) return;
     monitorMemberList.innerHTML = '';
-    const q = query.toLowerCase().trim();
 
+    const q = (filter || '').trim().toLowerCase();
     const filtered = membersDb.filter(m =>
       (m.ktp && m.ktp.toLowerCase().includes(q)) ||
       m.name.toLowerCase().includes(q) ||
       m.id.toLowerCase().includes(q) ||
-      m.phone.includes(q)
+      m.phone.includes(q) ||
+      (m.email && m.email.toLowerCase().includes(q))
     );
 
     if (filtered.length === 0) {
-      monitorMemberList.innerHTML = `
-        <div class="text-center py-6 text-[11.5px] text-ink-400">
-          Tidak ada data member yang cocok dengan pencarian.
-        </div>
-      `;
+      if (membersDb.length === 0) {
+        monitorMemberList.innerHTML = `
+          <div class="text-center py-8 px-4 rounded-xl border border-dashed border-slate-200 bg-slate-50/60 space-y-2.5">
+            <div class="w-10 h-10 rounded-full bg-slate-100 text-slate-500 flex items-center justify-center mx-auto text-lg">📋</div>
+            <div>
+              <strong class="text-[12px] text-ink-800 block">Belum Ada Member Terdaftar</strong>
+              <p class="text-[10.5px] text-ink-500 max-w-[240px] mx-auto mt-0.5">Database cloud masih kosong. Tambahkan member pertama melalui tab Daftar.</p>
+            </div>
+            <button type="button" onclick="goToRegisterTab()" class="px-3.5 py-1.5 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold text-[11px] shadow-xs transition">
+              + Tambah Member Pertama
+            </button>
+          </div>
+        `;
+      } else {
+        monitorMemberList.innerHTML = `
+          <div class="text-center py-6 text-[11.5px] text-ink-400">
+            Tidak ada member yang cocok dengan kata kunci pencarian.
+          </div>
+        `;
+      }
       return;
     }
 
     filtered.forEach(m => {
-      const claims = m.claimCount || (m.claimHistory ? m.claimHistory.length : 0);
+      const claims = m.claimCount != null ? m.claimCount : 0;
       let claimBadgeClass = 'bg-slate-100 text-ink-600 border-slate-200';
       if (claims === 1) claimBadgeClass = 'bg-amber-50 text-amber-800 border-amber-200 font-bold';
       else if (claims >= 2) claimBadgeClass = 'bg-rose-50 text-rose-800 border-rose-200 font-bold';
@@ -1103,34 +1388,30 @@
       const card = document.createElement('div');
       card.className = 'p-3 bg-slate-50 border border-slate-200 rounded-xl space-y-2 hover:border-brand-400 transition';
       card.innerHTML = `
-        <div class="flex items-start justify-between">
-          <div>
-            <div class="flex items-center gap-1.5">
-              <strong class="text-[13px] text-ink-900">${m.name}</strong>
-              <span class="px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 font-mono text-[9px] border border-brand-200">${m.id}</span>
+        <div class="flex items-start justify-between gap-2">
+          <div class="min-w-0 flex-1">
+            <div class="flex items-center gap-1.5 flex-wrap">
+              <strong class="text-[12.5px] sm:text-[13px] text-ink-900 truncate">${m.name}</strong>
+              <span class="px-1.5 py-0.5 rounded bg-brand-50 text-brand-700 font-mono text-[8.5px] sm:text-[9px] border border-brand-200 shrink-0">${m.id}</span>
             </div>
-            <p class="text-[10.5px] text-ink-500 mt-0.5">ID Identitas (KTP): <strong class="text-ink-800 font-mono">${m.ktp || '-'}</strong></p>
+            <p class="text-[10px] sm:text-[10.5px] text-ink-500 mt-0.5 truncate">No. KTP: <strong class="text-ink-800 font-mono">${m.ktp || '-'}</strong></p>
+            ${m.email ? `<p class="text-[9.5px] sm:text-[10px] text-ink-500 truncate">Email: <span class="text-ink-700 font-mono">${m.email}</span></p>` : ''}
           </div>
-          <span class="px-2 py-1 rounded-md text-[10px] border ${claimBadgeClass}">
+          <span class="px-2 py-0.5 sm:py-1 rounded-md text-[9.5px] sm:text-[10px] border shrink-0 ${claimBadgeClass}">
             ${claims}x Klaim
           </span>
         </div>
 
-        <div class="flex items-center justify-between pt-1.5 border-t border-slate-200/80 text-[10.5px]">
-          <span class="text-ink-400">WA: <strong class="text-ink-700 font-mono">+62${m.phone}</strong></span>
-          <div class="flex items-center gap-1.5">
-            <button class="px-2 py-1 bg-white hover:bg-brand-50 text-brand-700 border border-slate-200 rounded-lg text-[10px] font-bold shadow-xs transition flex items-center gap-1" onclick="openEditMemberModal('${m.id}')" title="Edit Member">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-              <span>Edit</span>
+        <div class="flex items-center justify-between pt-1.5 border-t border-slate-200/80 text-[10px] sm:text-[10.5px] gap-1">
+          <span class="text-ink-400 truncate">WA: <strong class="text-ink-700 font-mono">+62${m.phone}</strong></span>
+          <div class="flex items-center gap-1 shrink-0">
+            <button class="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white rounded-lg text-[9px] sm:text-[9.5px] font-bold shadow-2xs transition touch-manipulation flex items-center gap-1" onclick="sendMemberToWhatsApp('${m.id}')" title="Kirim rincian kartu ke WhatsApp member">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-5.795 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.434 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.434-9.889 9.884-.001 2.225.651 3.891 1.746 5.634l-.999 3.648 3.742-.981z"/></svg>
+              <span>Kirim WA</span>
             </button>
-            <button class="px-2 py-1 bg-white hover:bg-rose-50 text-rose-600 border border-slate-200 rounded-lg text-[10px] font-bold shadow-xs transition flex items-center gap-1" onclick="deleteMember('${m.id}')" title="Hapus Member">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-              <span>Hapus</span>
-            </button>
-            <button class="px-2.5 py-1 bg-brand-600 hover:bg-brand-700 text-white rounded-lg text-[10px] font-bold shadow-xs transition flex items-center gap-1" onclick="selectMemberToVerify('${m.id}')" title="Cek Keaslian">
-              <span>Cek</span>
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-            </button>
+            <button class="px-2 py-1 bg-white hover:bg-brand-50 active:scale-95 text-brand-700 border border-slate-200 rounded-lg text-[9px] sm:text-[9.5px] font-bold shadow-xs transition touch-manipulation" onclick="openEditMemberModal('${m.id}')">Edit</button>
+            <button class="px-2 py-1 bg-white hover:bg-rose-50 active:scale-95 text-rose-600 border border-slate-200 rounded-lg text-[9px] sm:text-[9.5px] font-bold shadow-xs transition touch-manipulation" onclick="deleteMember('${m.id}')">Hapus</button>
+            <button class="px-2.5 py-1 bg-brand-600 hover:bg-brand-700 active:scale-95 text-white rounded-lg text-[9px] sm:text-[9.5px] font-bold shadow-xs transition touch-manipulation" onclick="selectMemberToVerify('${m.id}')">Cek</button>
           </div>
         </div>
       `;
@@ -1138,66 +1419,48 @@
     });
   }
 
-  monitorSearchInput.addEventListener('input', (e) => {
-    renderMonitoringList(e.target.value);
-  });
+  if (monitorSearchInput) {
+    monitorSearchInput.addEventListener('input', (e) => {
+      renderMonitoringList(e.target.value);
+    });
+  }
 
   window.selectMemberToVerify = function(memberId) {
     const member = membersDb.find(m => m.id === memberId || m.ktp === memberId);
     const query = member ? (member.ktp || member.id) : memberId;
-    verifySearchInput.value = query;
+    if (verifySearchInput) verifySearchInput.value = query;
     verifyMemberCard(query);
-    document.getElementById('tab-btn-verify').click();
+    const tabVerifyBtn = document.getElementById('tab-btn-verify');
+    if (tabVerifyBtn) tabVerifyBtn.click();
   };
 
-  btnExportCsv.addEventListener('click', () => {
-    if (membersDb.length === 0) {
-      alert('Belum ada data member untuk diekspor.');
-      return;
-    }
-
-    let csv = 'ID_Member,Nama_Lengkap,ID_Kartu_Identitas_KTP,WhatsApp,Masa_Berlaku,Total_Klaim\n';
-    membersDb.forEach(m => {
-      const claimsTotal = m.claimCount != null ? m.claimCount : (m.claimHistory ? m.claimHistory.length : 0);
-      csv += `"${m.id}","${m.name}","${m.ktp || ''}","+62${m.phone}","${m.validity}","${claimsTotal}"\n`;
-    });
-
-    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `iGood-Kebumen-Monitoring-Klaim-${new Date().toISOString().slice(0, 10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(a);
-  });
-
   /* =========================================================
-     6B. MEMBER EDIT & DELETE MANAGEMENT
+     7. EDIT MEMBER MODAL LOGIC
      ========================================================= */
   const editMemberModal = document.getElementById('edit-member-modal');
+  const formEditMember = document.getElementById('form-edit-member');
   const editOriginalId = document.getElementById('edit-original-id');
   const editModalSubtitle = document.getElementById('edit-modal-subtitle');
   const editInputName = document.getElementById('edit-input-name');
   const editInputKtp = document.getElementById('edit-input-ktp');
   const editInputPhone = document.getElementById('edit-input-phone');
+  const editInputEmail = document.getElementById('edit-input-email');
   const editInputValidity = document.getElementById('edit-input-validity');
   const editInputClaims = document.getElementById('edit-input-claims');
-  const formEditMember = document.getElementById('form-edit-member');
 
   window.openEditMemberModal = function(memberId) {
     const member = membersDb.find(m => m.id === memberId);
-    if (!member) {
-      alert('Data member tidak ditemukan.');
-      return;
-    }
+    if (!member) return;
+
     editOriginalId.value = member.id;
     editModalSubtitle.innerText = `ID: ${member.id}`;
-    editInputName.value = member.name || '';
+    editInputName.value = member.name;
     editInputKtp.value = member.ktp || '';
-    editInputPhone.value = member.phone || '';
-    editInputValidity.value = member.validity || '09/26 - 09/27';
+    editInputPhone.value = member.phone;
+    if (editInputEmail) editInputEmail.value = member.email || '';
+    editInputValidity.value = member.validity;
     if (editInputClaims) {
-      editInputClaims.value = member.claimCount != null ? member.claimCount : (member.claimHistory ? member.claimHistory.length : 0);
+      editInputClaims.value = member.claimCount != null ? member.claimCount : 0;
     }
 
     editMemberModal.classList.remove('hidden');
@@ -1211,6 +1474,7 @@
 
   formEditMember.addEventListener('submit', async (e) => {
     e.preventDefault();
+
     const origId = editOriginalId.value;
     const member = membersDb.find(m => m.id === origId);
     if (!member) return;
@@ -1218,78 +1482,116 @@
     member.name = editInputName.value.trim();
     member.ktp = editInputKtp.value.trim();
     member.phone = editInputPhone.value.trim();
+    if (editInputEmail) member.email = editInputEmail.value.trim();
     member.validity = editInputValidity.value.trim() || '09/26 - 09/27';
     if (editInputClaims) {
       member.claimCount = parseInt(editInputClaims.value, 10) || 0;
     }
 
     saveMembersDb();
-    renderMonitoringList(monitorSearchInput.value);
+    renderMonitoringList(monitorSearchInput ? monitorSearchInput.value : '');
 
-    // If active verified member was updated, refresh display immediately
     if (currentVerifiedMember && currentVerifiedMember.id === origId) {
       currentVerifiedMember = member;
       showValidCardState(member);
     }
 
     closeEditMemberModal();
+    const toast = showToast(`Menyimpan perubahan ${member.name}...`, 'loading', 0);
 
-    // Sync to Cloud Database
     if (cloudDbClient) {
-      updateCloudStatus('syncing', 'MENYIMPAN...');
+      updateCloudStatus('syncing', 'SYNCING...');
       try {
-        const { error } = await cloudDbClient
+        const updatePayload = {
+          name: member.name,
+          ktp: member.ktp,
+          phone: member.phone,
+          email: member.email,
+          validity: member.validity,
+          claim_count: member.claimCount
+        };
+
+        let { error } = await cloudDbClient
           .from('members')
-          .update({
-            name: member.name,
-            ktp: member.ktp,
-            phone: member.phone,
-            validity: member.validity,
-            claim_count: member.claimCount
-          })
+          .update(updatePayload)
           .eq('id', origId);
+
+        // Resilient schema fallback: retry without email column if table doesn't have it yet
+        if (error && (error.code === '42703' || (error.message && error.message.includes('email')))) {
+          console.warn('Column email not in schema, retrying update without email');
+          delete updatePayload.email;
+          const retry = await cloudDbClient
+            .from('members')
+            .update(updatePayload)
+            .eq('id', origId);
+          error = retry.error;
+        }
 
         if (error) {
           console.error('Database update error:', error);
+          if (toast) toast.update(`Gagal update database: ${error.message}`, 'error', 3500);
           updateCloudStatus('local', 'SYNC ERROR');
         } else {
-          updateCloudStatus('connected', 'DATABASE CLOUD');
+          updateCloudStatus('connected', 'ONLINE');
+          if (toast) toast.update(`Data member ${member.name} berhasil diperbarui!`, 'success', 2500);
         }
       } catch (err) {
         console.error('Database update failed:', err);
+        if (toast) toast.update('Gagal terhubung ke database. Periksa koneksi internet.', 'error', 3500);
         updateCloudStatus('local', 'OFFLINE');
       }
     }
-
-    alert(`Data member ${member.name} (${member.id}) berhasil diperbarui!`);
   });
 
-  window.deleteMember = async function(memberId) {
+  /* =========================================================
+     8. DELETE MEMBER & CUSTOM CONFIRM MODAL
+     ========================================================= */
+  let memberToDeleteId = null;
+
+  window.deleteMember = function(memberId) {
     const member = membersDb.find(m => m.id === memberId);
     if (!member) return;
 
-    const claims = member.claimCount || (member.claimHistory ? member.claimHistory.length : 0);
-    const confirmDelete = confirm(`Hapus member ${member.name} (${member.id})?\n\nPERINGATAN: Seluruh data dan ${claims}x riwayat klaim member ini akan dihapus permanen.`);
-    if (!confirmDelete) return;
+    memberToDeleteId = memberId;
+    const modal = document.getElementById('confirm-delete-modal');
+    const nameEl = document.getElementById('delete-modal-target-name');
+    const ktpEl = document.getElementById('delete-modal-target-ktp');
+    const textEl = document.getElementById('confirm-delete-text');
 
-    membersDb = membersDb.filter(m => m.id !== memberId);
-    saveMembersDb();
-    renderMonitoringList(monitorSearchInput.value);
-
-    // If current verified member was deleted, fallback to remaining or reset
-    if (currentVerifiedMember && currentVerifiedMember.id === memberId) {
-      if (membersDb.length > 0) {
-        currentVerifiedMember = membersDb[0];
-        showValidCardState(membersDb[0]);
-        verifySearchInput.value = membersDb[0].ktp || membersDb[0].id;
-      } else {
-        currentVerifiedMember = null;
-        showInvalidCardState('Tidak Ada Member');
-        verifySearchInput.value = '';
-      }
+    if (nameEl) nameEl.innerText = member.name;
+    if (ktpEl) ktpEl.innerText = member.ktp || member.id;
+    const claims = member.claimCount || 0;
+    if (textEl) {
+      textEl.innerText = `Data member "${member.name}" dan ${claims}x riwayat klaim akan dihapus permanen dari Cloud Database.`;
     }
 
-    // Delete from Cloud Database
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+  };
+
+  window.closeConfirmDeleteModal = function() {
+    const modal = document.getElementById('confirm-delete-modal');
+    if (modal) {
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+    }
+    memberToDeleteId = null;
+  };
+
+  window.executeDeleteMember = async function() {
+    if (!memberToDeleteId) return;
+    const memberId = memberToDeleteId;
+    const member = membersDb.find(m => m.id === memberId);
+    const memberName = member ? member.name : 'Member';
+
+    const btn = document.getElementById('btn-execute-delete');
+    const btnText = document.getElementById('execute-delete-text');
+    if (btn) btn.disabled = true;
+    if (btnText) btnText.innerHTML = '<span class="inline-flex items-center gap-1.5"><svg class="w-3.5 h-3.5 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Menghapus...</span>';
+
+    const toast = showToast(`Menghapus ${memberName} dari Cloud Database...`, 'loading', 0);
+
+    // Delete in Cloud Database
     if (cloudDbClient) {
       updateCloudStatus('syncing', 'MENGHAPUS...');
       try {
@@ -1300,121 +1602,318 @@
 
         if (error) {
           console.error('Database delete error:', error);
+          if (toast) toast.update(`Gagal menghapus: ${error.message}`, 'error', 3500);
           updateCloudStatus('local', 'SYNC ERROR');
-        } else {
-          updateCloudStatus('connected', 'DATABASE CLOUD');
+          if (btn) btn.disabled = false;
+          if (btnText) btnText.innerText = 'Hapus Member';
+          return;
         }
       } catch (err) {
         console.error('Database delete failed:', err);
+        if (toast) toast.update('Gagal terhubung ke database.', 'error', 3500);
         updateCloudStatus('local', 'OFFLINE');
+        if (btn) btn.disabled = false;
+        if (btnText) btnText.innerText = 'Hapus Member';
+        return;
       }
     }
 
-    alert(`Member ${member.name} berhasil dihapus dari database.`);
+    // Remove locally
+    membersDb = membersDb.filter(m => m.id !== memberId);
+    saveMembersDb();
+    renderMonitoringList(monitorSearchInput ? monitorSearchInput.value : '');
+
+    if (currentVerifiedMember && currentVerifiedMember.id === memberId) {
+      if (membersDb.length > 0) {
+        currentVerifiedMember = membersDb[0];
+        showValidCardState(membersDb[0]);
+        if (verifySearchInput) verifySearchInput.value = membersDb[0].ktp || membersDb[0].id;
+      } else {
+        currentVerifiedMember = null;
+        showEmptyCardState();
+        if (verifySearchInput) verifySearchInput.value = '';
+      }
+    }
+
+    updateCloudStatus('connected', 'ONLINE');
+    closeConfirmDeleteModal();
+    if (btn) btn.disabled = false;
+    if (btnText) btnText.innerText = 'Hapus Member';
+
+    if (toast) toast.update(`Member ${memberName} berhasil dihapus permanen`, 'success', 3000);
   };
 
   /* =========================================================
-     7. MEMBER REGISTRATION CANVAS & FORM
+     9. WHATSAPP SHARE ENGINE
      ========================================================= */
-  const memberForm = document.getElementById('membership-form');
-  const inputName = document.getElementById('reg-name');
-  const inputKtp = document.getElementById('reg-ktp');
-  const inputPhone = document.getElementById('reg-phone');
-  const sigCanvas = document.getElementById('signature-canvas');
-  const sigCtx = sigCanvas.getContext('2d');
-  const clearBtn = document.getElementById('btn-clear-canvas');
-  const signPlaceholder = document.getElementById('sign-placeholder');
+  window.sendMemberToWhatsApp = function(memberId) {
+    const m = membersDb.find(item => item.id === memberId);
+    if (!m) return;
 
+    const currentUrl = window.location.origin + window.location.pathname;
+    const verifyLink = `${currentUrl}?id=${encodeURIComponent(m.id)}`;
+    const cleanPhone = (m.phone || '').replace(/\D/g, '');
+    const targetPhone = cleanPhone.startsWith('62') ? cleanPhone : ('62' + cleanPhone.replace(/^0+/, ''));
+
+    const message = 
+`*KARTU DIGITAL MEMBER IGOOD APPLE STORE KEBUMEN*
+Halo kak *${m.name}*, berikut adalah rincian kepemilikan Kartu Priority Care Member resmi Anda:
+
+- *Nama Member:* ${m.name}
+- *ID Member:* ${m.id}
+- *No. KTP:* ${m.ktp || '-'}
+- *Email:* ${m.email || '-'}
+- *Masa Berlaku:* ${m.validity || '09/26 - 09/27'}
+- *Riwayat Klaim:* ${m.claimCount || 0}x Klaim
+
+*Keuntungan Member iGood Kebumen:*
+✓ Diskon Servis Mesin 5% - 15% (Termasuk human / user error)
+✓ Reward Referral Tunai Rp 25.000 / unit saat merekomendasikan teman
+✓ Gratis Biaya Jasa Pengecekan & Diagnosis Unit Apple
+✓ Bebas Biaya Backup & Migrasi iCloud
+✓ Antrean Prioritas Pengerjaan Teknisi
+
+Lihat & Verifikasi Kartu Digital 3D Anda di sini:
+${verifyLink}
+
+Simpan pesan ini sebagai bukti sah keanggotaan Anda di iGood Apple Store Kebumen. Terima kasih!`;
+
+    const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
+    window.open(waUrl, '_blank');
+    showToast(`Membuka WhatsApp untuk ${m.name}...`, 'success', 2500);
+  };
+
+  /* =========================================================
+     10. TOUCH SIGNATURE MODAL & REGISTRATION ENGINE
+     ========================================================= */
+  const signatureModal = document.getElementById('signature-modal');
+  const sigCanvas = document.getElementById('signature-canvas');
+  const signPlaceholder = document.getElementById('sign-placeholder');
+  const signUnfilledBox = document.getElementById('sign-unfilled-box');
+  const signFilledBox = document.getElementById('sign-filled-box');
+  const signPreviewImg = document.getElementById('sign-preview-img');
+
+  const sigCtx = sigCanvas ? sigCanvas.getContext('2d') : null;
   let isDrawing = false;
   let hasSigned = false;
-  sigCtx.lineWidth = 3;
-  sigCtx.lineCap = 'round';
-  sigCtx.lineJoin = 'round';
-  sigCtx.strokeStyle = '#14487f';
+  let currentSignatureData = null;
 
-  function getPos(e) {
+  function resizeModalCanvas() {
+    if (!sigCanvas || !sigCtx) return;
     const rect = sigCanvas.getBoundingClientRect();
-    const cx = e.touches ? e.touches[0].clientX : e.clientX;
-    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    if (rect.width <= 0) return;
+
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const displayWidth = rect.width;
+    const displayHeight = 176;
+
+    sigCanvas.width = Math.round(displayWidth * dpr);
+    sigCanvas.height = Math.round(displayHeight * dpr);
+    sigCanvas.style.width = displayWidth + 'px';
+    sigCanvas.style.height = displayHeight + 'px';
+
+    sigCtx.scale(dpr, dpr);
+    sigCtx.strokeStyle = '#0f172a';
+    sigCtx.lineWidth = 2.5;
+    sigCtx.lineCap = 'round';
+    sigCtx.lineJoin = 'round';
+
+    if (currentSignatureData) {
+      const img = new Image();
+      img.onload = () => {
+        sigCtx.drawImage(img, 0, 0, displayWidth, displayHeight);
+      };
+      img.src = currentSignatureData;
+    }
+  }
+
+  window.openSignatureModal = function() {
+    if (!signatureModal) return;
+    signatureModal.classList.remove('hidden');
+    signatureModal.classList.add('flex');
+    setTimeout(() => {
+      resizeModalCanvas();
+      if (currentSignatureData) {
+        hasSigned = true;
+        if (signPlaceholder) signPlaceholder.classList.add('hidden');
+      }
+    }, 60);
+  };
+
+  window.closeSignatureModal = function() {
+    if (!signatureModal) return;
+    signatureModal.classList.add('hidden');
+    signatureModal.classList.remove('flex');
+  };
+
+  window.clearModalSign = function() {
+    if (!sigCanvas || !sigCtx) return;
+    sigCtx.save();
+    sigCtx.setTransform(1, 0, 0, 1, 0, 0);
+    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
+    sigCtx.restore();
+    sigCtx.strokeStyle = '#0f172a';
+    sigCtx.lineWidth = 2.5;
+    sigCtx.lineCap = 'round';
+    sigCtx.lineJoin = 'round';
+    hasSigned = false;
+    currentSignatureData = null;
+    if (signPlaceholder) signPlaceholder.classList.remove('hidden');
+  };
+
+  window.saveModalSign = function() {
+    if (!hasSigned && !currentSignatureData) {
+      showToast('Harap bubuhkan tanda tangan di layar sentuh terlebih dahulu', 'warning', 2500);
+      return;
+    }
+    if (hasSigned && sigCanvas) {
+      currentSignatureData = sigCanvas.toDataURL('image/png');
+    }
+    if (signPreviewImg && currentSignatureData) {
+      signPreviewImg.src = currentSignatureData;
+    }
+    if (signUnfilledBox) signUnfilledBox.classList.add('hidden');
+    if (signFilledBox) signFilledBox.classList.remove('hidden');
+
+    closeSignatureModal();
+    showToast('Tanda tangan digital berhasil disimpan!', 'success', 2200);
+  };
+
+  function getCanvasCoords(e) {
+    const rect = sigCanvas.getBoundingClientRect();
+    const touch = (e.touches && e.touches.length > 0) ? e.touches[0] : (e.changedTouches && e.changedTouches.length > 0 ? e.changedTouches[0] : e);
     return {
-      x: (cx - rect.left) * (sigCanvas.width / rect.width),
-      y: (cy - rect.top) * (sigCanvas.height / rect.height)
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top
     };
   }
 
-  function startDraw(e) {
+  function startDrawing(e) {
     isDrawing = true;
     hasSigned = true;
     if (signPlaceholder) signPlaceholder.classList.add('hidden');
-    const p = getPos(e);
+    const { x, y } = getCanvasCoords(e);
     sigCtx.beginPath();
-    sigCtx.moveTo(p.x, p.y);
+    sigCtx.moveTo(x, y);
     if (e.cancelable && e.type.startsWith('touch')) e.preventDefault();
   }
 
-  function draw(e) {
+  function moveDrawing(e) {
     if (!isDrawing) return;
-    const p = getPos(e);
-    sigCtx.lineTo(p.x, p.y);
+    const { x, y } = getCanvasCoords(e);
+    sigCtx.lineTo(x, y);
     sigCtx.stroke();
     if (e.cancelable && e.type.startsWith('touch')) e.preventDefault();
   }
 
-  function stopDraw() {
-    if (!isDrawing) return;
+  function stopDrawing() {
     isDrawing = false;
-    sigCtx.closePath();
   }
 
-  sigCanvas.addEventListener('touchstart', startDraw, { passive: false });
-  sigCanvas.addEventListener('touchmove', draw, { passive: false });
-  sigCanvas.addEventListener('touchend', stopDraw);
-  sigCanvas.addEventListener('mousedown', startDraw);
-  sigCanvas.addEventListener('mousemove', draw);
-  sigCanvas.addEventListener('mouseup', stopDraw);
-  sigCanvas.addEventListener('mouseleave', stopDraw);
+  if (sigCanvas) {
+    sigCanvas.addEventListener('touchstart', startDrawing, { passive: false });
+    sigCanvas.addEventListener('touchmove', moveDrawing, { passive: false });
+    sigCanvas.addEventListener('touchend', stopDrawing);
+    sigCanvas.addEventListener('mousedown', startDrawing);
+    sigCanvas.addEventListener('mousemove', moveDrawing);
+    sigCanvas.addEventListener('mouseup', stopDrawing);
+  }
+  window.addEventListener('resize', resizeModalCanvas);
 
-  clearBtn.addEventListener('click', () => {
-    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
-    hasSigned = false;
-    if (signPlaceholder) signPlaceholder.classList.remove('hidden');
-  });
+  const memberForm = document.getElementById('membership-form');
+  const inputName = document.getElementById('reg-name');
+  const inputKtp = document.getElementById('reg-ktp');
+  const inputPhone = document.getElementById('reg-phone');
+  const inputEmail = document.getElementById('reg-email');
 
   memberForm.addEventListener('submit', async (e) => {
     e.preventDefault();
 
     const agreeTerms = document.getElementById('reg-agree-terms');
     if (agreeTerms && !agreeTerms.checked) {
-      alert('Harap setujui rincian Keuntungan serta Syarat & Ketentuan (S&K) terlebih dahulu sebelum melanjutkan.');
+      showToast('Harap setujui Syarat & Ketentuan sebelum mendaftar', 'warning', 3000);
       agreeTerms.focus();
       return;
     }
 
-    if (!hasSigned) {
-      alert('Harap bubuhkan tanda tangan digital pelanggan di layar sebelum menerbitkan kartu member.');
-      sigCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!currentSignatureData) {
+      showToast('Harap bubuhkan tanda tangan digital terlebih dahulu', 'warning', 3000);
+      openSignatureModal();
       return;
     }
 
     const name = inputName.value.trim();
     const ktp = inputKtp.value.trim();
     const phone = inputPhone.value.trim();
+    const email = inputEmail ? inputEmail.value.trim() : '';
     const last4 = ktp.replace(/\D/g, '').slice(-4) || String(Math.floor(1000 + Math.random() * 9000));
     const newId = `IG-KBM-2026-${last4}`;
-    const sigData = hasSigned ? sigCanvas.toDataURL('image/png') : null;
+    const sigData = currentSignatureData;
+
+    const submitBtn = memberForm.querySelector('button[type="submit"]');
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="inline-flex items-center gap-1.5"><svg class="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Menerbitkan Kartu Member...</span>';
+    }
+
+    const toast = showToast(`Mendaftarkan member ${name} ke Cloud Database...`, 'loading', 0);
 
     const newMember = {
       id: newId,
       name,
       ktp,
       phone,
+      email,
       validity: '09/26 - 09/27',
       signatureData: sigData,
       registeredAt: new Date().toISOString(),
       claimCount: 0
     };
 
-    // Check duplicate ID / KTP
+    // Save to Cloud Database with resilient schema fallback
+    if (cloudDbClient) {
+      updateCloudStatus('syncing', 'MENDAFTARKAN...');
+      try {
+        const insertPayload = {
+          id: newId,
+          name: name,
+          ktp: ktp,
+          phone: phone,
+          email: email,
+          validity: '09/26 - 09/27',
+          signature_data: sigData,
+          claim_count: 0
+        };
+
+        let { error } = await cloudDbClient
+          .from('members')
+          .upsert([insertPayload]);
+
+        // Resilient schema fallback: retry without email column if table doesn't have it yet
+        if (error && (error.code === '42703' || (error.message && error.message.includes('email')))) {
+          console.warn('Column email not in schema, retrying upsert without email');
+          delete insertPayload.email;
+          const retry = await cloudDbClient
+            .from('members')
+            .upsert([insertPayload]);
+          error = retry.error;
+        }
+
+        if (error) {
+          console.error('Database insert error:', error);
+          if (toast) toast.update(`Gagal simpan ke database: ${error.message}`, 'error', 3500);
+          updateCloudStatus('local', 'SYNC ERROR');
+        } else {
+          updateCloudStatus('connected', 'ONLINE');
+        }
+      } catch (err) {
+        console.error('Database insert failed:', err);
+        if (toast) toast.update('Gagal terhubung ke database.', 'error', 3500);
+        updateCloudStatus('local', 'OFFLINE');
+      }
+    }
+
+    // Save locally
     const existingIdx = membersDb.findIndex(m => m.id === newId || (m.ktp && m.ktp === ktp));
     if (existingIdx >= 0) {
       membersDb[existingIdx] = newMember;
@@ -1423,57 +1922,39 @@
     }
     saveMembersDb();
 
-    // Upsert into Cloud Database
-    if (cloudDbClient) {
-      updateCloudStatus('syncing', 'MENDAFTARKAN...');
-      try {
-        const { error } = await cloudDbClient
-          .from('members')
-          .upsert([{
-            id: newId,
-            name: name,
-            ktp: ktp,
-            phone: phone,
-            validity: '09/26 - 09/27',
-            signature_data: sigData,
-            claim_count: 0
-          }]);
+    if (toast) toast.update(`Member ${name} (ID: ${newId}) berhasil diterbitkan!`, 'success', 3500);
 
-        if (error) {
-          console.error('Database insert error:', error);
-          updateCloudStatus('local', 'SYNC ERROR');
-        } else {
-          updateCloudStatus('connected', 'DATABASE CLOUD');
-        }
-      } catch (err) {
-        console.error('Database insert failed:', err);
-        updateCloudStatus('local', 'OFFLINE');
-      }
+    // Reset Form & Signature State
+    memberForm.reset();
+    clearModalSign();
+    if (signUnfilledBox) signUnfilledBox.classList.remove('hidden');
+    if (signFilledBox) signFilledBox.classList.add('hidden');
+
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.innerHTML = 'Simpan &amp; Terbitkan Kartu Member (Rp 25.000)';
     }
 
-    alert(`Pendaftaran Berhasil!\nMember ${name} (ID: ${newId} · No. Identitas: ${ktp}) telah terdaftar dengan status 0x Klaim.`);
-
-    // Reset Form
-    memberForm.reset();
-    sigCtx.clearRect(0, 0, sigCanvas.width, sigCanvas.height);
-    hasSigned = false;
-    if (signPlaceholder) signPlaceholder.classList.remove('hidden');
-
     // Switch to Verification View for this new member
-    selectMemberToVerify(ktp);
+    selectMemberToVerify(ktp || newId);
   });
 
   /* =========================================================
-     8. INITIALIZATION
+     11. INITIALIZATION & URL ROUTING
      ========================================================= */
   loadMembersDb();
   updateMetrics();
-  // Verify default member on load
-  verifyMemberCard('3305012309990001');
-
-  // Cloud Database Async Sync & Realtime Listener
   syncFromCloudDb();
   setupCloudRealtime();
+
+  // Auto-verify if opened with URL query ?id= or ?verify=
+  const urlParams = new URLSearchParams(window.location.search);
+  const paramId = urlParams.get('id') || urlParams.get('verify');
+  if (paramId) {
+    setTimeout(() => {
+      selectMemberToVerify(paramId);
+    }, 400);
+  }
 </script>
 </body>
 </html>
