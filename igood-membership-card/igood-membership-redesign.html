@@ -1607,6 +1607,292 @@
     ctx.restore();
   }
 
+  async function renderMemberCardCanvas(m) {
+    const W = 1050;
+    const H = 660;
+    const GAP = 36;
+    const TOTAL_H = H * 2 + GAP + 40;
+
+    const canvas = document.createElement('canvas');
+    canvas.width = W;
+    canvas.height = TOTAL_H;
+    const ctx = canvas.getContext('2d');
+
+    // Outer background canvas
+    ctx.fillStyle = '#06101e';
+    ctx.fillRect(0, 0, W, TOTAL_H);
+
+    // Preload logo image
+    const logoImg = new Image();
+    let logoLoaded = false;
+    await new Promise((resolve) => {
+      logoImg.onload = () => { logoLoaded = true; resolve(); };
+      logoImg.onerror = () => resolve();
+      logoImg.src = 'IGOOD LOGO.png';
+    });
+
+    // Preload signature image if exists
+    let sigImg = null;
+    if (m.signatureData && m.signatureData.startsWith('data:image')) {
+      sigImg = new Image();
+      await new Promise((resolve) => {
+        sigImg.onload = () => resolve();
+        sigImg.onerror = () => { sigImg = null; resolve(); };
+        sigImg.src = m.signatureData;
+      });
+    }
+
+    // =====================================================
+    // SISI DEPAN KARTU (FRONT SIDE)
+    // =====================================================
+    const frontY = 20;
+    ctx.save();
+    roundCanvasRect(ctx, 30, frontY, W - 60, H, 38);
+    ctx.clip();
+
+    // Sapphire Blue Gradient
+    const fGrad = ctx.createLinearGradient(30, frontY, W - 30, frontY + H);
+    fGrad.addColorStop(0, '#030d1a');
+    fGrad.addColorStop(0.45, '#071c35');
+    fGrad.addColorStop(0.85, '#14487f');
+    fGrad.addColorStop(1, '#1a5b9f');
+    ctx.fillStyle = fGrad;
+    ctx.fillRect(30, frontY, W - 60, H);
+
+    // Radial Glow Sheen
+    const fRadial = ctx.createRadialGradient(W * 0.75, frontY + 120, 20, W * 0.75, frontY + 120, W * 0.6);
+    fRadial.addColorStop(0, 'rgba(223, 183, 108, 0.22)');
+    fRadial.addColorStop(0.5, 'rgba(26, 91, 159, 0.15)');
+    fRadial.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    ctx.fillStyle = fRadial;
+    ctx.fillRect(30, frontY, W - 60, H);
+
+    // Border Card
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 3;
+    roundCanvasRect(ctx, 30, frontY, W - 60, H, 38);
+    ctx.stroke();
+
+    // Header: Logo & Brand
+    const logoX = 70;
+    const logoY = frontY + 45;
+    if (logoLoaded) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(logoX + 32, logoY + 32, 32, 0, Math.PI * 2);
+      ctx.fillStyle = '#ffffff';
+      ctx.fill();
+      ctx.clip();
+      ctx.drawImage(logoImg, logoX, logoY, 64, 64);
+      ctx.restore();
+    }
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 30px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('iGood Apple Store Kebumen', logoX + 80, logoY + 30);
+
+    // Badge PRIORITY CARE MEMBER
+    roundCanvasRect(ctx, logoX + 80, logoY + 42, 220, 26, 13);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.fillStyle = '#14487f';
+    ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('PRIORITY CARE MEMBER', logoX + 104, logoY + 59);
+
+    // NFC Waves & EMV Chip
+    drawNfcWavesCanvas(ctx, W - 110, frontY + 80);
+    drawEmvChipCanvas(ctx, 75, frontY + 145, 95, 70);
+
+    // Member Details
+    ctx.fillStyle = '#b9d5f3';
+    ctx.font = '600 16px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('NAME / NAMA MEMBER:', 75, frontY + 430);
+
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 34px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText((m.name || 'PRIORITY MEMBER').toUpperCase(), 75, frontY + 475);
+
+    ctx.font = '700 24px "Space Grotesk", monospace';
+    ctx.fillStyle = '#e1eefb';
+    ctx.fillText(`ID:  ${m.id}`, 75, frontY + 520);
+
+    ctx.font = '500 20px "Space Grotesk", monospace';
+    ctx.fillStyle = '#b9d5f3';
+    ctx.fillText(`KTP: ${m.ktp || '-'}`, 75, frontY + 555);
+    ctx.fillText(`VALID: ${m.validity || '09/26 - 09/27'}`, 75, frontY + 590);
+
+    // Claims Badge
+    const claims = m.claimCount != null ? m.claimCount : 0;
+    roundCanvasRect(ctx, 75, frontY + 608, 130, 28, 6);
+    ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+    ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText(`${claims}x Klaim Resmi`, 86, frontY + 627);
+
+    // QR Code Box (bottom right)
+    const qrBoxSize = 150;
+    const qrBoxX = W - 90 - qrBoxSize;
+    const qrBoxY = frontY + H - 40 - qrBoxSize;
+    roundCanvasRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 18);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(20, 72, 127, 0.3)';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Load QR Code safely with anonymous crossOrigin
+    let qrLoaded = false;
+    const qrImg = new Image();
+    qrImg.crossOrigin = 'anonymous';
+    await new Promise((res) => {
+      qrImg.onload = () => { qrLoaded = true; res(); };
+      qrImg.onerror = () => res();
+      qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(m.id)}`;
+    });
+
+    if (qrLoaded) {
+      try {
+        ctx.drawImage(qrImg, qrBoxX + 10, qrBoxY + 10, qrBoxSize - 20, qrBoxSize - 20);
+      } catch (e) {
+        qrLoaded = false;
+      }
+    }
+
+    if (!qrLoaded) {
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'bold 13px monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('OFFICIAL QR', qrBoxX + qrBoxSize / 2, qrBoxY + 55);
+      ctx.font = 'bold 15px monospace';
+      ctx.fillText(m.id.split('-').slice(-1)[0] || 'PASS', qrBoxX + qrBoxSize / 2, qrBoxY + 85);
+      ctx.font = '500 11px sans-serif';
+      ctx.fillText('iGood Kebumen', qrBoxX + qrBoxSize / 2, qrBoxY + 115);
+      ctx.textAlign = 'left';
+    }
+
+    ctx.restore();
+
+    // =====================================================
+    // SISI BELAKANG KARTU (BACK SIDE)
+    // =====================================================
+    const backY = frontY + H + GAP;
+    ctx.save();
+    roundCanvasRect(ctx, 30, backY, W - 60, H, 38);
+    ctx.clip();
+
+    // Background
+    const bGrad = ctx.createLinearGradient(30, backY, W - 30, backY + H);
+    bGrad.addColorStop(0, '#040c17');
+    bGrad.addColorStop(0.5, '#07182c');
+    bGrad.addColorStop(1, '#0c2444');
+    ctx.fillStyle = bGrad;
+    ctx.fillRect(30, backY, W - 60, H);
+
+    // Card Border Stroke
+    ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
+    ctx.lineWidth = 3;
+    roundCanvasRect(ctx, 30, backY, W - 60, H, 38);
+    ctx.stroke();
+
+    // Magnetic Stripe
+    ctx.fillStyle = '#050608';
+    ctx.fillRect(30, backY + 30, W - 60, 80);
+
+    // Digital Signature Area
+    const sigBoxX = 75;
+    const sigBoxY = backY + 130;
+    const sigBoxW = W - 150;
+    const sigBoxH = 88;
+
+    roundCanvasRect(ctx, sigBoxX, sigBoxY, sigBoxW, sigBoxH, 12);
+    ctx.fillStyle = '#ffffff';
+    ctx.fill();
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('AUTHORIZED SIGNATURE / TANDA TANGAN DIGITAL RESMI', sigBoxX + 20, sigBoxY + 24);
+
+    ctx.fillStyle = '#1e3a8a';
+    ctx.font = 'bold 16px monospace';
+    ctx.fillText('SECURE PASS', sigBoxX + sigBoxW - 140, sigBoxY + 54);
+
+    if (sigImg) {
+      ctx.drawImage(sigImg, sigBoxX + 25, sigBoxY + 26, 260, 56);
+    } else {
+      ctx.fillStyle = '#0f172a';
+      ctx.font = 'italic bold 28px "Caveat", "Merriweather", cursive, serif';
+      ctx.fillText(m.name, sigBoxX + 35, sigBoxY + 62);
+    }
+
+    // Privileges Box
+    const pBoxX = 75;
+    const pBoxY = backY + 240;
+    const pBoxW = W - 150;
+    const pBoxH = 265;
+
+    roundCanvasRect(ctx, pBoxX, pBoxY, pBoxW, pBoxH, 18);
+    ctx.fillStyle = 'rgba(26, 91, 159, 0.2)';
+    ctx.fill();
+    ctx.strokeStyle = 'rgba(130, 179, 229, 0.35)';
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+
+    ctx.fillStyle = '#dfb76c';
+    ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('HAK ISTIMEWA RESMI MEMBER iGOOD KEBUMEN:', pBoxX + 24, pBoxY + 38);
+
+    // Perk 1
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 18px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('🛡️  Garansi Servis Mesin (Termasuk Human/User Error)', pBoxX + 24, pBoxY + 80);
+    ctx.fillStyle = '#dfb76c';
+    ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('DISKON 5% - 15%', pBoxX + pBoxW - 190, pBoxY + 80);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '400 14px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('Khusus unit yang terdaftar dibeli di iGood Apple Store Kebumen', pBoxX + 62, pBoxY + 104);
+
+    // Perk 2
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 18px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('🎁  Program Referral Pembeli Baru Toko', pBoxX + 24, pBoxY + 148);
+    ctx.fillStyle = '#dfb76c';
+    ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('REWARD RP 25.000 / UNIT', pBoxX + pBoxW - 250, pBoxY + 148);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '400 14px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('Bonus tunai/potongan setiap membawa teman yang membeli unit baru', pBoxX + 62, pBoxY + 172);
+
+    // Perk 3
+    ctx.fillStyle = '#ffffff';
+    ctx.font = '600 18px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('⚡  Gratis Jasa Pengecekan & Diagnosis Unit + Migrasi iCloud', pBoxX + 24, pBoxY + 216);
+    ctx.fillStyle = '#38bdf8';
+    ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('FREE', pBoxX + pBoxW - 100, pBoxY + 216);
+    ctx.fillStyle = '#94a3b8';
+    ctx.font = '400 14px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('Antrean prioritas konsultasi & pengecekan kesehatan hardware Apple', pBoxX + 62, pBoxY + 240);
+
+    // Footer
+    ctx.fillStyle = '#cbd5e1';
+    ctx.font = '600 16px "Plus Jakarta Sans", sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('iGood Apple Store Kebumen | Layanan Resmi & Konsultasi Gadget | CS WA: 08761 253 0880', W / 2, backY + 540);
+
+    ctx.fillStyle = '#64748b';
+    ctx.font = '400 13px "Plus Jakarta Sans", sans-serif';
+    ctx.fillText('Masa aktif kartu 1 tahun sejak pendaftaran. Tunjukkan kartu digital ini saat klaim garansi & referral.', W / 2, backY + 570);
+    ctx.textAlign = 'left';
+
+    ctx.restore();
+    return canvas;
+  }
+
   window.downloadMemberCardPng = async function(memberId) {
     const m = membersDb.find(item => item.id === memberId || item.ktp === memberId) || currentVerifiedMember;
     if (!m) {
@@ -1617,290 +1903,7 @@
     const toast = showToast(`Membuat gambar kartu digital resmi ${m.name}...`, 'loading', 0);
 
     try {
-      const W = 1050;
-      const H = 660;
-      const GAP = 36;
-      const TOTAL_H = H * 2 + GAP + 40;
-
-      const canvas = document.createElement('canvas');
-      canvas.width = W;
-      canvas.height = TOTAL_H;
-      const ctx = canvas.getContext('2d');
-
-      // Outer background canvas
-      ctx.fillStyle = '#06101e';
-      ctx.fillRect(0, 0, W, TOTAL_H);
-
-      // Preload logo image
-      const logoImg = new Image();
-      let logoLoaded = false;
-      await new Promise((resolve) => {
-        logoImg.onload = () => { logoLoaded = true; resolve(); };
-        logoImg.onerror = () => resolve();
-        logoImg.src = 'IGOOD LOGO.png';
-      });
-
-      // Preload signature image if exists
-      let sigImg = null;
-      if (m.signatureData && m.signatureData.startsWith('data:image')) {
-        sigImg = new Image();
-        await new Promise((resolve) => {
-          sigImg.onload = () => resolve();
-          sigImg.onerror = () => { sigImg = null; resolve(); };
-          sigImg.src = m.signatureData;
-        });
-      }
-
-      // =====================================================
-      // SISI DEPAN KARTU (FRONT SIDE)
-      // =====================================================
-      const frontY = 20;
-      ctx.save();
-      roundCanvasRect(ctx, 30, frontY, W - 60, H, 38);
-      ctx.clip();
-
-      // Sapphire Blue Gradient
-      const fGrad = ctx.createLinearGradient(30, frontY, W - 30, frontY + H);
-      fGrad.addColorStop(0, '#030d1a');
-      fGrad.addColorStop(0.45, '#071c35');
-      fGrad.addColorStop(0.85, '#14487f');
-      fGrad.addColorStop(1, '#1a5b9f');
-      ctx.fillStyle = fGrad;
-      ctx.fillRect(30, frontY, W - 60, H);
-
-      // Radial Glow Sheen
-      const fRadial = ctx.createRadialGradient(W * 0.75, frontY + 120, 20, W * 0.75, frontY + 120, W * 0.6);
-      fRadial.addColorStop(0, 'rgba(223, 183, 108, 0.22)');
-      fRadial.addColorStop(0.5, 'rgba(26, 91, 159, 0.15)');
-      fRadial.addColorStop(1, 'rgba(0, 0, 0, 0)');
-      ctx.fillStyle = fRadial;
-      ctx.fillRect(30, frontY, W - 60, H);
-
-      // Border Card
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-      ctx.lineWidth = 3;
-      roundCanvasRect(ctx, 30, frontY, W - 60, H, 38);
-      ctx.stroke();
-
-      // Header: Logo & Brand
-      const logoX = 70;
-      const logoY = frontY + 45;
-      if (logoLoaded) {
-        ctx.save();
-        ctx.beginPath();
-        ctx.arc(logoX + 32, logoY + 32, 32, 0, Math.PI * 2);
-        ctx.fillStyle = '#ffffff';
-        ctx.fill();
-        ctx.clip();
-        ctx.drawImage(logoImg, logoX, logoY, 64, 64);
-        ctx.restore();
-      }
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 30px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('iGood Apple Store Kebumen', logoX + 80, logoY + 30);
-
-      // Badge PRIORITY CARE MEMBER
-      roundCanvasRect(ctx, logoX + 80, logoY + 42, 220, 26, 13);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
-      ctx.fillStyle = '#14487f';
-      ctx.font = 'bold 12px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('PRIORITY CARE MEMBER', logoX + 104, logoY + 59);
-
-      // NFC Waves & EMV Chip
-      drawNfcWavesCanvas(ctx, W - 110, frontY + 80);
-      drawEmvChipCanvas(ctx, 75, frontY + 145, 95, 70);
-
-      // Member Details
-      ctx.fillStyle = '#b9d5f3';
-      ctx.font = '600 16px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('NAME / NAMA MEMBER:', 75, frontY + 430);
-
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 34px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText((m.name || 'PRIORITY MEMBER').toUpperCase(), 75, frontY + 475);
-
-      ctx.font = '700 24px "Space Grotesk", monospace';
-      ctx.fillStyle = '#e1eefb';
-      ctx.fillText(`ID:  ${m.id}`, 75, frontY + 520);
-
-      ctx.font = '500 20px "Space Grotesk", monospace';
-      ctx.fillStyle = '#b9d5f3';
-      ctx.fillText(`KTP: ${m.ktp || '-'}`, 75, frontY + 555);
-      ctx.fillText(`VALID: ${m.validity || '09/26 - 09/27'}`, 75, frontY + 590);
-
-      // Claims Badge
-      const claims = m.claimCount != null ? m.claimCount : 0;
-      roundCanvasRect(ctx, 75, frontY + 608, 130, 28, 6);
-      ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.font = 'bold 14px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText(`${claims}x Klaim Resmi`, 86, frontY + 627);
-
-      // QR Code Box (bottom right)
-      const qrBoxSize = 150;
-      const qrBoxX = W - 90 - qrBoxSize;
-      const qrBoxY = frontY + H - 40 - qrBoxSize;
-      roundCanvasRect(ctx, qrBoxX, qrBoxY, qrBoxSize, qrBoxSize, 18);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(20, 72, 127, 0.3)';
-      ctx.lineWidth = 2;
-      ctx.stroke();
-
-      // Load QR Code safely with anonymous crossOrigin
-      let qrLoaded = false;
-      const qrImg = new Image();
-      qrImg.crossOrigin = 'anonymous';
-      await new Promise((res) => {
-        qrImg.onload = () => { qrLoaded = true; res(); };
-        qrImg.onerror = () => res();
-        qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(m.id)}`;
-      });
-
-      if (qrLoaded) {
-        try {
-          ctx.drawImage(qrImg, qrBoxX + 10, qrBoxY + 10, qrBoxSize - 20, qrBoxSize - 20);
-        } catch (e) {
-          qrLoaded = false;
-        }
-      }
-
-      if (!qrLoaded) {
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'bold 13px monospace';
-        ctx.textAlign = 'center';
-        ctx.fillText('OFFICIAL QR', qrBoxX + qrBoxSize / 2, qrBoxY + 55);
-        ctx.font = 'bold 15px monospace';
-        ctx.fillText(m.id.split('-').slice(-1)[0] || 'PASS', qrBoxX + qrBoxSize / 2, qrBoxY + 85);
-        ctx.font = '500 11px sans-serif';
-        ctx.fillText('iGood Kebumen', qrBoxX + qrBoxSize / 2, qrBoxY + 115);
-        ctx.textAlign = 'left';
-      }
-
-      ctx.restore();
-
-      // =====================================================
-      // SISI BELAKANG KARTU (BACK SIDE)
-      // =====================================================
-      const backY = frontY + H + GAP;
-      ctx.save();
-      roundCanvasRect(ctx, 30, backY, W - 60, H, 38);
-      ctx.clip();
-
-      // Background
-      const bGrad = ctx.createLinearGradient(30, backY, W - 30, backY + H);
-      bGrad.addColorStop(0, '#040c17');
-      bGrad.addColorStop(0.5, '#07182c');
-      bGrad.addColorStop(1, '#0c2444');
-      ctx.fillStyle = bGrad;
-      ctx.fillRect(30, backY, W - 60, H);
-
-      // Card Border Stroke
-      ctx.strokeStyle = 'rgba(255, 255, 255, 0.22)';
-      ctx.lineWidth = 3;
-      roundCanvasRect(ctx, 30, backY, W - 60, H, 38);
-      ctx.stroke();
-
-      // Magnetic Stripe
-      ctx.fillStyle = '#050608';
-      ctx.fillRect(30, backY + 30, W - 60, 80);
-
-      // Digital Signature Area
-      const sigBoxX = 75;
-      const sigBoxY = backY + 130;
-      const sigBoxW = W - 150;
-      const sigBoxH = 88;
-
-      roundCanvasRect(ctx, sigBoxX, sigBoxY, sigBoxW, sigBoxH, 12);
-      ctx.fillStyle = '#ffffff';
-      ctx.fill();
-      ctx.strokeStyle = '#cbd5e1';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.fillStyle = '#64748b';
-      ctx.font = '700 13px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('AUTHORIZED SIGNATURE / TANDA TANGAN DIGITAL RESMI', sigBoxX + 20, sigBoxY + 24);
-
-      ctx.fillStyle = '#1e3a8a';
-      ctx.font = 'bold 16px monospace';
-      ctx.fillText('SECURE PASS', sigBoxX + sigBoxW - 140, sigBoxY + 54);
-
-      if (sigImg) {
-        ctx.drawImage(sigImg, sigBoxX + 25, sigBoxY + 26, 260, 56);
-      } else {
-        ctx.fillStyle = '#0f172a';
-        ctx.font = 'italic bold 28px "Caveat", "Merriweather", cursive, serif';
-        ctx.fillText(m.name, sigBoxX + 35, sigBoxY + 62);
-      }
-
-      // Privileges Box
-      const pBoxX = 75;
-      const pBoxY = backY + 240;
-      const pBoxW = W - 150;
-      const pBoxH = 265;
-
-      roundCanvasRect(ctx, pBoxX, pBoxY, pBoxW, pBoxH, 18);
-      ctx.fillStyle = 'rgba(26, 91, 159, 0.2)';
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(130, 179, 229, 0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      ctx.fillStyle = '#dfb76c';
-      ctx.font = 'bold 20px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('HAK ISTIMEWA RESMI MEMBER iGOOD KEBUMEN:', pBoxX + 24, pBoxY + 38);
-
-      // Perk 1
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '600 18px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('🛡️  Garansi Servis Mesin (Termasuk Human/User Error)', pBoxX + 24, pBoxY + 80);
-      ctx.fillStyle = '#dfb76c';
-      ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('DISKON 5% - 15%', pBoxX + pBoxW - 190, pBoxY + 80);
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '400 14px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('Khusus unit yang terdaftar dibeli di iGood Apple Store Kebumen', pBoxX + 62, pBoxY + 104);
-
-      // Perk 2
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '600 18px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('🎁  Program Referral Pembeli Baru Toko', pBoxX + 24, pBoxY + 148);
-      ctx.fillStyle = '#dfb76c';
-      ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('REWARD RP 25.000 / UNIT', pBoxX + pBoxW - 250, pBoxY + 148);
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '400 14px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('Bonus tunai/potongan setiap membawa teman yang membeli unit baru', pBoxX + 62, pBoxY + 172);
-
-      // Perk 3
-      ctx.fillStyle = '#ffffff';
-      ctx.font = '600 18px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('⚡  Gratis Jasa Pengecekan & Diagnosis Unit + Migrasi iCloud', pBoxX + 24, pBoxY + 216);
-      ctx.fillStyle = '#38bdf8';
-      ctx.font = 'bold 18px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('FREE', pBoxX + pBoxW - 100, pBoxY + 216);
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '400 14px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('Antrean prioritas konsultasi & pengecekan kesehatan hardware Apple', pBoxX + 62, pBoxY + 240);
-
-      // Footer
-      ctx.fillStyle = '#cbd5e1';
-      ctx.font = '600 16px "Plus Jakarta Sans", sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText('iGood Apple Store Kebumen | Layanan Resmi & Konsultasi Gadget | CS WA: 08761 253 0880', W / 2, backY + 540);
-
-      ctx.fillStyle = '#64748b';
-      ctx.font = '400 13px "Plus Jakarta Sans", sans-serif';
-      ctx.fillText('Masa aktif kartu 1 tahun sejak pendaftaran. Tunjukkan kartu digital ini saat klaim garansi & referral.', W / 2, backY + 570);
-      ctx.textAlign = 'left';
-
-      ctx.restore();
-
-      // Trigger download
+      const canvas = await renderMemberCardCanvas(m);
       const dataUrl = canvas.toDataURL('image/png');
       const dlLink = document.createElement('a');
       dlLink.download = `iGood-Member-${m.id}.png`;
@@ -2248,49 +2251,99 @@
   };
 
   /* =========================================================
-     9. WHATSAPP SHARE ENGINE
+     9. WHATSAPP SHARE ENGINE (DIRECT IMAGE & CAPTION, NO LINK)
      ========================================================= */
   window.sendMemberToWhatsApp = async function(memberId) {
     const m = membersDb.find(item => item.id === memberId);
     if (!m) return;
 
-    // Otomatis download file gambar PNG kartu agar siap dilampirkan admin ke WA
-    downloadMemberCardPng(m.id);
+    const toast = showToast(`Menyiapkan kartu digital & keterangan untuk ${m.name}...`, 'loading', 0);
 
-    const currentUrl = window.location.origin + window.location.pathname;
-    const customerPassLink = `${currentUrl}?id=${encodeURIComponent(m.id)}`;
     const cleanPhone = (m.phone || '').replace(/\D/g, '');
     const targetPhone = cleanPhone.startsWith('62') ? cleanPhone : ('62' + cleanPhone.replace(/^0+/, ''));
 
     const message = 
-`*KARTU DIGITAL MEMBER IGOOD APPLE STORE KEBUMEN*
-Halo kak *${m.name}*, selamat bergabung! Berikut adalah Kartu Digital Priority Care Member resmi Anda.
+`*KARTU DIGITAL RESMI MEMBER IGOOD APPLE STORE KEBUMEN*
+Halo kak *${m.name}*, selamat bergabung! Berikut adalah rincian kepemilikan Kartu Priority Care Member resmi Anda:
 
 - *Nama Member:* ${m.name}
 - *ID Member:* ${m.id}
 - *No. KTP:* ${m.ktp || '-'}
-- *Email:* ${m.email || '-'}
-- *Masa Berlaku:* ${m.validity || '09/26 - 09/27'}
+${m.email ? `- *Email:* ${m.email}\n` : ''}- *Masa Berlaku:* ${m.validity || '09/26 - 09/27'}
 - *Riwayat Klaim:* ${m.claimCount || 0}x Klaim
 
 *Hak Istimewa & Keuntungan Member iGood Kebumen:*
 ✓ Diskon Servis Mesin 5% - 15% (Termasuk human / user error)
-✓ Reward Referral Tunai Rp 25.000 / unit setiap merekomendasikan teman
+✓ Reward Referral Tunai Rp 25.000 / unit setiap membawa teman belanja di iGood
 ✓ Gratis Biaya Jasa Pengecekan & Diagnosis Unit Apple
 ✓ Bebas Biaya Backup & Migrasi iCloud
 ✓ Antrean Prioritas Pengerjaan Teknisi
 
-*Gambar kartu digital resmi Anda terlampir bersama pesan ini.*
-Untuk melihat tampilan interaktif 3D & verifikasi keaslian kartu Anda secara online:
-${customerPassLink}
+_Simpan gambar kartu digital ini sebagai bukti sah keanggotaan Anda di iGood Apple Store Kebumen saat klaim garansi servis & promo referral di toko. Terima kasih!_`;
 
-_Simpan kartu digital dan pesan ini sebagai bukti sah keanggotaan Anda di iGood Apple Store Kebumen. Terima kasih!_`;
+    try {
+      const canvas = await renderMemberCardCanvas(m);
+      const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+      const fileName = `iGood-Member-${m.id}.png`;
+      const file = new File([blob], fileName, { type: 'image/png' });
 
-    const waUrl = `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`;
-    setTimeout(() => {
-      window.open(waUrl, '_blank');
-      showToast(`Gambar kartu tersimpan di perangkat! Lampirkan ke WhatsApp ${m.name}`, 'info', 4500);
-    }, 450);
+      // 1. Prioritas Utama: Web Share API (Langsung share file gambar + caption ke WhatsApp di HP/ponsel)
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        if (toast) toast.dismiss();
+        await navigator.share({
+          title: `Kartu Member iGood - ${m.name}`,
+          text: message,
+          files: [file]
+        });
+        showToast(`Kartu digital ${m.name} berhasil dibagikan ke WhatsApp!`, 'success', 3000);
+        return;
+      }
+
+      // 2. Fallback untuk Desktop / PC Browser (yang belum mendukung direct file share)
+      // Salin gambar kartu ke Clipboard agar di WhatsApp Web tinggal tekan Ctrl+V
+      let copiedToClipboard = false;
+      if (navigator.clipboard && window.ClipboardItem) {
+        try {
+          await navigator.clipboard.write([
+            new ClipboardItem({ 'image/png': blob })
+          ]);
+          copiedToClipboard = true;
+        } catch (clipErr) {
+          console.warn('Clipboard write status:', clipErr);
+        }
+      }
+
+      // Otomatis download file gambar kartu ke folder Unduhan
+      const dataUrl = canvas.toDataURL('image/png');
+      const dlLink = document.createElement('a');
+      dlLink.download = fileName;
+      dlLink.href = dataUrl;
+      document.body.appendChild(dlLink);
+      dlLink.click();
+      document.body.removeChild(dlLink);
+
+      // Buka WhatsApp
+      const waUrl = targetPhone.length > 5
+        ? `https://wa.me/${targetPhone}?text=${encodeURIComponent(message)}`
+        : `https://wa.me/?text=${encodeURIComponent(message)}`;
+
+      setTimeout(() => {
+        window.open(waUrl, '_blank');
+        if (copiedToClipboard) {
+          if (toast) toast.update(`Gambar disalin ke clipboard! Tekan Ctrl+V di chat WhatsApp ${m.name}`, 'success', 5000);
+        } else {
+          if (toast) toast.update(`Gambar kartu terunduh! Lampirkan ke chat WhatsApp ${m.name}`, 'info', 5000);
+        }
+      }, 350);
+
+    } catch (err) {
+      if (err.name === 'AbortError') {
+        if (toast) toast.dismiss();
+        return;
+      }
+      console.error('Error saat membagikan kartu ke WhatsApp:', err);
+      if (toast) toast.update('Gagal membagikan kartu. Silakan coba kembali.', 'error', 3000);
+    }
   };
 
   /* =========================================================
